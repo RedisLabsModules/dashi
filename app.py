@@ -57,7 +57,7 @@ def indexPage():
         url = f"https://circleci.com/api/v2/pipeline?org-slug={repo}"
 
         headers = {
-            {'Circle-Token': os.getenv('CIRCLE_CI_TOKEN')},
+            'Circle-Token': os.getenv('CIRCLE_CI_TOKEN'),
         }
 
         response = requests.request("GET", url, headers=headers)
