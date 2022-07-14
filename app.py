@@ -64,18 +64,37 @@ def indexPage():
         branches = []
         for item in json.loads(response.text)['items']:
             branches += [item['vcs']['branch']]
+            repos[repo]['id'] = item['id']
         repos[repo]['branches'] = branches
-        print(response.text)
 
     return render_template('index.html', repos=repos)
 
 
-@app.route("/pr")
-def prJobs():
+@app.route("/branch")
+def branchPage():
     repository = request.args.get('repository', type=str)
     branch = request.args.get('branch', type=str)
+    pipeline_id = request.args.get('pipeline_id', type=str)
+    out = {}
+    # get workflow to get jobs
+    url = f"https://circleci.com/api/v2/pipeline/{pipeline_id}/workflow"
 
-    return jsonify({'repo': repository, 'branch': branch})
+    headers = {
+        'Circle-Token': os.getenv('CIRCLE_CI_TOKEN'),
+    }
+
+    response = requests.request("GET", url, headers=headers)
+    response_dict = json.loads(response.text)
+    for workflow in response_dict['items']:
+        url = f"https://circleci.com/api/v2/workflow/{workflow['id']}/job"
+        workflow_response = requests.request("GET", url, headers=headers)
+        workflow_response_dict = json.loads(workflow_response.text)
+        out[workflow['id']] = {
+            'name': workflow['name'],
+            'jobs': workflow_response_dict['items']
+        }
+    print(out)
+    return render_template('jobs.html', workflows=out)
 
 
 if __name__ == '__main__':

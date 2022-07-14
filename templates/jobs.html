@@ -19,13 +19,13 @@
 <body>
 <div class="container-fluid">
 <div class="row">
-    <div class="col-6 align-self-start">repo</div>
-    <div class="col-sm align-self-start">branches</div>
+    <div class="col-6 align-self-start">workflow</div>
+    <div class="col-sm align-self-start">jobs</div>
 </div>
 <div class="row">
-    {% for repo in repos %}
-        <div class="col-6">{{ repo }}</div>
-        {%  for branch in repos[repo]["branches"] %}<div class="col-sm"><a href="/branch?repository={{ repo }}&branch={{ branch }}&pipeline_id={{ repos[repo]['id'] }}">{{ branch }}</a></div> {% endfor %}
+    {% for workflow in workflows %}
+        <div class="col-6">{{ workflows[workflow]['name'] }}</div>
+        {%  for job in workflows[workflow]["jobs"] %}<div class="col-sm"><a href="/">{{ job['name'] }}: {{ job['status'] }}</a></div> {% endfor %}
     {% endfor %}
 </div>
 </div>
