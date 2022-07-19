@@ -3,10 +3,13 @@ import os
 
 import requests
 import yaml
-from app import Pipeline, Workflow
+from flask_sqlalchemy import SQLAlchemy
 
+from app import Pipeline, Workflow, app
 
+db = SQLAlchemy(app)
 pipelines = Pipeline.query.all()
+pipeline_ids = [pipeline.pipelineId for pipeline in pipelines]
 print(pipelines)
 repos = {}
 
@@ -19,11 +22,22 @@ def getPipelineId(slug: str) -> list:
     }
 
     response = requests.request("GET", url, headers=headers)
+    if response.status_code != 200:
+        return []
     response = json.loads(response.text)
     slug = slug[slug.rfind('/')+1:]
-    for workflow in response['items']:
-        if workflow['vcs']['branch'] in repos[slug]['branches']:
-            pipelines_out += [workflow]
+    for pipeline_item in response['items']:
+        if 'branch' in pipeline_item['vcs'] and \
+                pipeline_item['vcs']['branch'] in repos[slug]['branches']:
+            pipelines_out += [pipeline_item]
+            new_pipeline = Pipeline()
+            new_pipeline.pipelineId = pipeline_item['number']
+            new_pipeline.projectSlug = pipeline_item['project_slug']
+            new_pipeline.branch = pipeline_item['vcs']['branch']
+            new_pipeline.revision = pipeline_item['vcs']['revision']
+            if pipeline_item['number'] not in pipeline_ids:
+                db.session.add(new_pipeline)
+                db.session.commit()
     return pipelines_out
 
 
@@ -36,7 +50,18 @@ def getWorkflowInfo(workflow_id: str) -> list:
 
     response = requests.request("GET", url, headers=headers)
     response = json.loads(response.text)
-    print(response)
+    if len(response['items']) > 1:
+        print(response, len(response['items']))
+    else:
+        print(response)
+    response = response['items'][0]
+    new_workflow = Workflow()
+    new_workflow.workflowId = response['id']
+    new_workflow.pipelineId = int(response['pipeline_number'])
+    new_workflow.name = response['name']
+    new_workflow.status = response['status']
+    db.session.add(new_workflow)
+    db.session.commit()
     return workflow_out
 
 

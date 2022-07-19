@@ -6,6 +6,7 @@ from flask import Flask, jsonify, render_template, request
 import http.client
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func, and_
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
@@ -17,7 +18,6 @@ migrate = Migrate(app, db)
 class Pipeline(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     projectSlug = db.Column(db.String)
-    number = db.Column(db.Integer)
     pipelineId = db.Column(db.Integer, unique=True)
     branch = db.Column(db.String)
     revision = db.Column(db.String)
@@ -25,7 +25,7 @@ class Pipeline(db.Model):
 
 class Workflow(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    workflowId = db.Column(db.Integer)
+    workflowId = db.Column(db.String, unique=True)
     pipelineId = db.Column(db.Integer, db.ForeignKey('pipeline.pipelineId'))
     status = db.Column(db.String)
     name = db.Column(db.String)
@@ -65,33 +65,20 @@ def hello_world():
 
 @app.route("/")
 def indexPage():
-    repos = {}
-    with open("main.yaml", "r") as stream:
-        try:
-            yaml_object = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
-            exit(2)
-        if 'repos' in yaml_object:
-            for slug in yaml_object['repos']:
-                for repo in yaml_object['repos'][slug]:
-                    repos[f"{slug}/{repo}"] = {}
-    for repo in repos:
-        url = f"https://circleci.com/api/v2/pipeline?org-slug={repo}"
+    subq = db.session.query(
+        Pipeline.projectSlug,
+        func.max(Pipeline.pipelineId).label('maxpipelineid')
+    ).group_by(Pipeline.projectSlug).subquery('t2')
 
-        headers = {
-            'Circle-Token': os.getenv('CIRCLE_CI_TOKEN'),
-        }
+    query = db.session.query(Pipeline, Workflow).join(
+        subq,
+        db.and_(
+            Pipeline.projectSlug == subq.c.projectSlug,
+            Pipeline.pipelineId == subq.c.maxpipelineid
+        )
+    ).join(Workflow, Pipeline.pipelineId == Workflow.pipelineId).all()
 
-        response = requests.request("GET", url, headers=headers)
-        branches = []
-        for item in json.loads(response.text)['items']:
-            if item['vcs']['branch'] not in branches:
-                branches += [item['vcs']['branch']]
-            repos[repo]['id'] = item['id']
-        repos[repo]['branches'] = branches
-
-    return render_template('index.html', repos=repos)
+    return render_template('index.html', pipelines=query)
 
 
 @app.route("/commits")
