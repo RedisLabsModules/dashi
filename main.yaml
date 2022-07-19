@@ -1,3 +1,57 @@
+---
 repos:
-  github:
-    - RedisJSON
+  RediSearch:
+    github: github.com/RediSearch/RediSearch
+    branches:
+      - master
+      - 2.4
+      - 2.2
+      - 2.0
+    tests:
+      - circleci/default-flow
+      - circleci/nightly
+      - circleci/nightly-performance
+      - opereto
+  RedisJSON:
+    github: github.com/RedisJSON/RedisJSON
+    branches:
+      - master
+      - 2.0
+    tests:
+      - circleci/default-flow
+      - circleci/nightly
+      - opereto
+  RedisGraph:
+    github: github.com/RedisGraph/RedisGraph
+    branches:
+      - master
+      - 2.8
+      - 2.4
+    tests:
+      - circleci/build_and_package
+      - circleci/nightly
+      - opereto
+  RedisTimeSeries:
+    github: github.com/RedisTimeSeries/RedisTimeSeries
+    branches:
+      - master
+      - 1.6
+      - 1.4
+    tests:
+      - circleci/default-flow
+      - circleci/nightly
+      - circleci/nightly-twice-a-week
+      - opereto
+  redis-docker:
+    github: github.com/RedisLabsModules/redis-docker
+    branches:
+      - master
+    tests:
+      - circleci/general
+      - circleci/weekly
+  redis-py:
+    github: github.com/redis/redis-py
+    branches:
+      - master
+    tests:
+      - githubactions/CI

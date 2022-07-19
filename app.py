@@ -1,11 +1,34 @@
 import json
 import os
-
 import requests as requests
 import yaml
 from flask import Flask, jsonify, render_template, request
 import http.client
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+
+class Pipeline(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    projectSlug = db.Column(db.String)
+    number = db.Column(db.Integer)
+    pipelineId = db.Column(db.Integer, unique=True)
+    branch = db.Column(db.String)
+    revision = db.Column(db.String)
+
+
+class Workflow(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    workflowId = db.Column(db.Integer)
+    pipelineId = db.Column(db.Integer, db.ForeignKey('pipeline.pipelineId'))
+    status = db.Column(db.String)
+    name = db.Column(db.String)
 
 
 @app.route("/hello-world")
