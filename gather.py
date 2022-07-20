@@ -34,6 +34,8 @@ def getPipelineId(slug: str) -> list:
             new_pipeline.projectSlug = pipeline_item['project_slug']
             new_pipeline.branch = pipeline_item['vcs']['branch']
             new_pipeline.revision = pipeline_item['vcs']['revision']
+            if 'commit' in pipeline_item['vcs']:
+                new_pipeline.message = pipeline_item['vcs']['commit']['subject']
             if pipeline_item['number'] not in pipeline_ids:
                 db.session.add(new_pipeline)
                 db.session.commit()

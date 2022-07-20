@@ -28,7 +28,7 @@
     {% for pipeline in pipelines %}
         <tr>
             <th scope="row">{{ pipeline[0].projectSlug }}</th>
-            <td class="{% if pipeline[1].status == 'success' %}bg-success{% else %}bg-danger{% endif %}"><a href="/commits?repository={{ pipeline[0].projectSlug }}&branch={{ pipeline[0].branch }}">{{ pipeline[0].branch }}</a></td>
+            <td class="{% if pipeline[1].status == 'success' %}bg-success{% else %}bg-danger{% endif %}"><a href="/commits?pipeline_id={{ pipeline[0].pipelineId }}">{{ pipeline[0].branch }}</a></td>
         </tr>
     {% endfor %}
 </tbody>

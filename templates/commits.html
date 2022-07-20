@@ -26,8 +26,8 @@
 <tbody>
     {% for commit in branch_info %}
         <tr>
-            <th scope="row">{{ commit }}</th>
-            <td class="{% if branch_info[commit]['status'] == 'success' %}bg-success{% else %}bg-danger{% endif %}"><a href="/" class="text-dark">{{ branch_info[commit]['message'] }}</a></td>
+            <th scope="row">{{ commit[1].revision }}</th>
+            <td class="{% if commit[1].status == 'success' %}bg-success{% else %}bg-danger{% endif %}"><a href="/" class="text-dark">{{ commit[1].message }}</a></td>
         </tr>
     {% endfor %}
 </tbody>
