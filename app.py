@@ -17,15 +17,15 @@ migrate = Migrate(app, db)
 
 class Pipeline(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    projectSlug = db.Column(db.String)
-    pipelineId = db.Column(db.Integer, unique=True)
-    branch = db.Column(db.String)
+    projectSlug = db.Column(db.String, index=True)
+    pipelineId = db.Column(db.Integer, unique=True, index=True)
+    branch = db.Column(db.String, index=True)
     revision = db.Column(db.String)
 
 
 class Workflow(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    workflowId = db.Column(db.String, unique=True)
+    workflowId = db.Column(db.String, unique=True, index=True)
     pipelineId = db.Column(db.Integer, db.ForeignKey('pipeline.pipelineId'))
     status = db.Column(db.String)
     name = db.Column(db.String)

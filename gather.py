@@ -8,9 +8,8 @@ from flask_sqlalchemy import SQLAlchemy
 from app import Pipeline, Workflow, app
 
 db = SQLAlchemy(app)
-pipelines = Pipeline.query.all()
-pipeline_ids = [pipeline.pipelineId for pipeline in pipelines]
-print(pipelines)
+pipeline_ids = [x[0] for x in db.session.query(Pipeline.pipelineId).all()]
+workflow_ids = [x[0] for x in db.session.query(Workflow.workflowId).all()]
 repos = {}
 
 
@@ -55,13 +54,14 @@ def getWorkflowInfo(workflow_id: str) -> list:
     else:
         print(response)
     response = response['items'][0]
-    new_workflow = Workflow()
-    new_workflow.workflowId = response['id']
-    new_workflow.pipelineId = int(response['pipeline_number'])
-    new_workflow.name = response['name']
-    new_workflow.status = response['status']
-    db.session.add(new_workflow)
-    db.session.commit()
+    if response['id'] not in workflow_ids:
+        new_workflow = Workflow()
+        new_workflow.workflowId = response['id']
+        new_workflow.pipelineId = int(response['pipeline_number'])
+        new_workflow.name = response['name']
+        new_workflow.status = response['status']
+        db.session.add(new_workflow)
+        db.session.commit()
     return workflow_out
 
 
