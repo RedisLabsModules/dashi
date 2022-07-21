@@ -56,7 +56,7 @@ def getWorkflowInfo(workflow_id: str) -> list:
     else:
         print(response)
     response = response['items'][0]
-    if response['id'] not in workflow_ids:
+    if response['id'] not in workflow_ids and response['status'] != 'running':
         new_workflow = Workflow()
         new_workflow.workflowId = response['id']
         new_workflow.pipelineId = int(response['pipeline_number'])

@@ -52,11 +52,23 @@ def indexPage():
 
 @app.route("/commits")
 def branchPage():
-    pipeline_id = request.args.get('pipeline_id', type=str)
+    project = request.args.get('project', type=str)
+    subq = db.session.query(
+        Pipeline.projectSlug,
+        func.max(Pipeline.pipelineId).label('maxpipelineid'),
+        Pipeline.revision,
+    ).filter(Pipeline.projectSlug == project).group_by(Pipeline.projectSlug, Pipeline.revision).subquery('t2')
 
-    workflows = db.session.query(Workflow, Pipeline).join(Workflow, Pipeline.pipelineId == Workflow.pipelineId).filter_by(pipelineId=pipeline_id).all()
+    query = db.session.query(Pipeline, Workflow).join(
+        subq,
+        db.and_(
+            Pipeline.projectSlug == subq.c.projectSlug,
+            Pipeline.pipelineId == subq.c.maxpipelineid,
+            Pipeline.revision == subq.c.revision,
+        )
+    ).join(Workflow, Pipeline.pipelineId == Workflow.pipelineId).order_by(Workflow.id.desc()).all()
 
-    return render_template('commits.html', branch_info=workflows)
+    return render_template('commits.html', branch_info=query)
 
 
 if __name__ == '__main__':
