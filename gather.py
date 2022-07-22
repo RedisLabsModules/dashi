@@ -13,7 +13,7 @@ workflow_ids = [x[0] for x in db.session.query(Workflow.workflowId).all()]
 repos = {}
 
 
-def getPipelineId(slug: str) -> list:
+def circleCiGetPipelineId(slug: str) -> list:
     pipelines_out = []
     url = f"https://circleci.com/api/v2/project/{slug}/pipeline"
     headers = {
@@ -42,7 +42,7 @@ def getPipelineId(slug: str) -> list:
     return pipelines_out
 
 
-def getWorkflowInfo(workflow_id: str) -> list:
+def circleCiGetWorkflowInfo(workflow_id: str) -> list:
     workflow_out = []
     url = f"https://circleci.com/api/v2/pipeline/{workflow_id}/workflow"
     headers = {
@@ -79,6 +79,6 @@ with open("main.yaml", "r") as stream:
         slug_name = project['github']
         slug_name = slug_name.replace('.com', '')
         print(slug_name)
-        pipeline_list = getPipelineId(slug_name)
+        pipeline_list = circleCiGetPipelineId(slug_name)
         for pipeline in pipeline_list:
-            jobs = getWorkflowInfo(pipeline['id'])
+            jobs = circleCiGetWorkflowInfo(pipeline['id'])

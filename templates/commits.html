@@ -26,8 +26,8 @@
 <tbody>
     {% for commit in branch_info %}
         <tr>
-            <th scope="row">{{ commit[0].revision[:7] }}</th>
-            <td class="{% if commit[1].status == 'success' %}bg-success{% else %}bg-danger{% endif %}">
+            <th scope="row" class="{% if commit[1].status == 'success' %}bg-success{% else %}bg-danger{% endif %}">{{ commit[0].revision[:7] }}</th>
+            <td>
                 <a href="https://app.circleci.com/pipelines/{{ commit[0].projectSlug }}/{{ commit[0].pipelineId }}/workflows/{{ commit[1].workflowId }}" class="text-dark">{{ commit[0].message }}</a>
             </td>
         </tr>
