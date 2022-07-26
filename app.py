@@ -1,9 +1,5 @@
-import json
 import os
-import requests as requests
-import yaml
 from flask import Flask, jsonify, render_template, request
-import http.client
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, and_
@@ -13,6 +9,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('post
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+
+class Commits(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    projectSlug = db.Column(db.String, index=True)
+    branch = db.Column(db.String, index=True)
+    commit = db.Column(db.String, unique=False, index=True)
+    message = db.Column(db.String, unique=False, index=False)
 
 
 class Pipeline(db.Model):
@@ -32,22 +36,49 @@ class Workflow(db.Model):
     name = db.Column(db.String)
 
 
-@app.route("/")
-def indexPage():
+def getBranchStatus(project_name: str, branch_name: str) -> bool:
+    status = False
     subq = db.session.query(
         Pipeline.projectSlug,
         func.max(Pipeline.pipelineId).label('maxpipelineid')
-    ).group_by(Pipeline.projectSlug).subquery('t2')
+    ).filter(Pipeline.branch == branch_name, Pipeline.projectSlug == f"gh/{project_name}").group_by(Pipeline.projectSlug).subquery('t2')
 
-    query = db.session.query(Pipeline, Workflow).join(
+    query = db.session.query(Pipeline, Workflow.status).join(
         subq,
         db.and_(
             Pipeline.projectSlug == subq.c.projectSlug,
             Pipeline.pipelineId == subq.c.maxpipelineid
         )
-    ).join(Workflow, Pipeline.pipelineId == Workflow.pipelineId).all()
+    ).filter(
+        Pipeline.projectSlug == f"gh/{project_name}",
+    ).join(
+        Workflow,
+        Pipeline.pipelineId == Workflow.pipelineId
+    ).all()
+    if len(query) != 0:
+        if query[0][1] == 'success':
+            status = True
+    return status
 
-    return render_template('index.html', pipelines=query)
+
+@app.route("/")
+def indexPage():
+    repo_info = db.session.query(Commits).all()
+    project_branches = {}
+    for item in repo_info:
+        branch_status = getBranchStatus(item.projectSlug, item.branch)
+        if item.projectSlug not in project_branches:
+            project_branches[item.projectSlug] = [{
+                'branch': item.branch,
+                'status': branch_status
+            }]
+        if {'branch': item.branch, 'status': branch_status} not in project_branches[item.projectSlug]:
+            project_branches[item.projectSlug] += [{
+                'branch': item.branch,
+                'status': branch_status
+            }]
+
+    return render_template('index.html', projects=project_branches)
 
 
 @app.route("/commits")
