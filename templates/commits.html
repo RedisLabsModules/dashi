@@ -16,6 +16,7 @@
 }
 </style>
 <body>
+<div align="center"><h3>{{ repo }}/{{ branch }}</h3></div>
 <table class="table">
 <thead>
 <tr>
@@ -26,9 +27,9 @@
 <tbody>
     {% for commit in branch_info %}
         <tr>
-            <th scope="row" class="{% if commit[1].status == 'success' %}bg-success{% else %}bg-danger{% endif %}">{{ commit[0].revision[:7] }}</th>
+            <th scope="row" class="{% if commit.commit == 'success' %}bg-success{% else %}bg-danger{% endif %}">{{ commit.commit[:7] }}</th>
             <td>
-                <a href="https://app.circleci.com/pipelines/{{ commit[0].projectSlug }}/{{ commit[0].pipelineId }}/workflows/{{ commit[1].workflowId }}" class="text-dark">{{ commit[0].message }}</a>
+                <a href="https://app.circleci.com/pipelines/{{ commit.projectSlug }}/{{ commit.id }}/workflows/{{ commit.id }}" class="text-dark">{{ commit.message }}</a>
             </td>
         </tr>
     {% endfor %}

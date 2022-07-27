@@ -29,10 +29,10 @@
     {% for project in projects %}
         <tr>
             <th scope="row" style="width: 20px;">{{ project }}</th>
-            {% for branch in projects[project]|sort(attribute='branch', reverse=True) %}
+            {% for branch in projects[project]['branches']|sort(reverse=True) %}
                 <td
-                        class="{% if branch['status'] == True %}bg-success{% else %}bg-danger{% endif %}">
-                    {{ branch['branch'] }}
+                        class="{% if projects[project]['statuses'][branch] == 'success' %}bg-success{% elif projects[project]['statuses'][branch] == None %}bg-secondary{% else %}bg-danger{% endif %}">
+                    <a href="/commits?project={{ project }}&branch={{ branch }}">{{ branch }}</a>
                 </td>
             {% endfor %}
         </tr>

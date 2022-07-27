@@ -1,4 +1,6 @@
 import os
+
+import yaml
 from flask import Flask, jsonify, render_template, request
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -24,16 +26,11 @@ class Pipeline(db.Model):
     projectSlug = db.Column(db.String, index=True)
     pipelineId = db.Column(db.Integer, unique=True, index=True)
     branch = db.Column(db.String, index=True)
+    workflowId = db.Column(db.String, unique=True, index=True)
+    status = db.Column(db.String)
+    workflowName = db.Column(db.String)
     revision = db.Column(db.String)
     message = db.Column(db.String)
-
-
-class Workflow(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    workflowId = db.Column(db.String, unique=True, index=True)
-    pipelineId = db.Column(db.Integer, db.ForeignKey('pipeline.pipelineId'))
-    status = db.Column(db.String)
-    name = db.Column(db.String)
 
 
 def getBranchStatus(project_name: str, branch_name: str) -> bool:
@@ -41,19 +38,14 @@ def getBranchStatus(project_name: str, branch_name: str) -> bool:
     subq = db.session.query(
         Pipeline.projectSlug,
         func.max(Pipeline.pipelineId).label('maxpipelineid')
-    ).filter(Pipeline.branch == branch_name, Pipeline.projectSlug == f"gh/{project_name}").group_by(Pipeline.projectSlug).subquery('t2')
+    ).group_by(Pipeline.projectSlug).subquery('t2')
 
-    query = db.session.query(Pipeline, Workflow.status).join(
+    query = db.session.query(Pipeline).join(
         subq,
         db.and_(
             Pipeline.projectSlug == subq.c.projectSlug,
             Pipeline.pipelineId == subq.c.maxpipelineid
         )
-    ).filter(
-        Pipeline.projectSlug == f"gh/{project_name}",
-    ).join(
-        Workflow,
-        Pipeline.pipelineId == Workflow.pipelineId
     ).all()
     if len(query) != 0:
         if query[0][1] == 'success':
@@ -63,43 +55,39 @@ def getBranchStatus(project_name: str, branch_name: str) -> bool:
 
 @app.route("/")
 def indexPage():
-    repo_info = db.session.query(Commits).all()
-    project_branches = {}
-    for item in repo_info:
-        branch_status = getBranchStatus(item.projectSlug, item.branch)
-        if item.projectSlug not in project_branches:
-            project_branches[item.projectSlug] = [{
-                'branch': item.branch,
-                'status': branch_status
-            }]
-        if {'branch': item.branch, 'status': branch_status} not in project_branches[item.projectSlug]:
-            project_branches[item.projectSlug] += [{
-                'branch': item.branch,
-                'status': branch_status
-            }]
-
-    return render_template('index.html', projects=project_branches)
+    with open("main.yaml", "r") as stream:
+        try:
+            yaml_object = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            exit(2)
+        repos = yaml_object['repos']
+        for project in repos:
+            project_obj = repos[project]
+            project_obj['branches'] = [str(x) for x in project_obj['branches']]
+            statuses = db.session.query(
+                Pipeline.branch,
+                Pipeline.status
+            ).filter(
+                Pipeline.branch.in_(project_obj['branches']),
+                Pipeline.projectSlug == project_obj['github'].replace('github.com', 'gh')
+            ).all()
+            project_obj['statuses'] = {x[0]: x[1] for x in statuses}
+            repos[project] = project_obj
+        return render_template('index.html', projects=repos)
 
 
 @app.route("/commits")
 def branchPage():
     project = request.args.get('project', type=str)
-    subq = db.session.query(
-        Pipeline.projectSlug,
-        func.max(Pipeline.pipelineId).label('maxpipelineid'),
-        Pipeline.revision,
-    ).filter(Pipeline.projectSlug == project).group_by(Pipeline.projectSlug, Pipeline.revision).subquery('t2')
-
-    query = db.session.query(Pipeline, Workflow).join(
-        subq,
-        db.and_(
-            Pipeline.projectSlug == subq.c.projectSlug,
-            Pipeline.pipelineId == subq.c.maxpipelineid,
-            Pipeline.revision == subq.c.revision,
-        )
-    ).join(Workflow, Pipeline.pipelineId == Workflow.pipelineId).order_by(Workflow.id.desc()).all()
-
-    return render_template('commits.html', branch_info=query)
+    branch = request.args.get('branch', type=str)
+    query = db.session.query(
+                Commits
+            ).filter(
+                Commits.branch == branch,
+                Commits.projectSlug == f"{project}/{project}"
+            ).all()
+    return render_template('commits.html', branch_info=query, repo=project, branch=branch)
 
 
 if __name__ == '__main__':
