@@ -82,11 +82,14 @@ def branchPage():
     project = request.args.get('project', type=str)
     branch = request.args.get('branch', type=str)
     query = db.session.query(
-                Commits
-            ).filter(
-                Commits.branch == branch,
-                Commits.projectSlug == f"{project}/{project}"
-            ).all()
+        Commits,
+        Pipeline,
+    ).filter(
+        Commits.branch == branch,
+        Commits.projectSlug == f"{project}/{project}",
+        Pipeline.branch == branch,
+        Pipeline.revision == Commits.commit
+    ).order_by(Commits.id.desc()).all()
     return render_template('commits.html', branch_info=query, repo=project, branch=branch)
 
 
