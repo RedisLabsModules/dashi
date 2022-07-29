@@ -1,10 +1,8 @@
 import os
-
 import yaml
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, render_template, request
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func, and_
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres:', 'postgresql:')
@@ -33,24 +31,11 @@ class Pipeline(db.Model):
     message = db.Column(db.String)
 
 
-def getBranchStatus(project_name: str, branch_name: str) -> bool:
-    status = False
-    subq = db.session.query(
-        Pipeline.projectSlug,
-        func.max(Pipeline.pipelineId).label('maxpipelineid')
-    ).group_by(Pipeline.projectSlug).subquery('t2')
-
-    query = db.session.query(Pipeline).join(
-        subq,
-        db.and_(
-            Pipeline.projectSlug == subq.c.projectSlug,
-            Pipeline.pipelineId == subq.c.maxpipelineid
-        )
-    ).all()
-    if len(query) != 0:
-        if query[0][1] == 'success':
-            status = True
-    return status
+class Job(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    workflowId = db.Column(db.String, index=True)
+    status = db.Column(db.String)
+    name = db.Column(db.String, index=True)
 
 
 @app.route("/")
@@ -91,6 +76,16 @@ def branchPage():
         Pipeline.revision == Commits.commit
     ).order_by(Commits.id.desc()).all()
     return render_template('commits.html', branch_info=query, repo=project, branch=branch)
+
+
+@app.route('/jobs')
+def viewJobs():
+    project = request.args.get('project', type=str)
+    branch = request.args.get('branch', type=str)
+    commit = request.args.get('commit', type=str)
+    workflow = request.args.get('workflow', type=str)
+    jobs = db.session.query(Job).filter(Job.workflowId == workflow).order_by(Job.name).all()
+    return render_template('jobs.html', repo=project.split('/')[-1], branch=branch, commit=commit, jobs=jobs)
 
 
 if __name__ == '__main__':
