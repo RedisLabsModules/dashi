@@ -63,7 +63,7 @@ def indexPage():
 
 
 @app.route("/commits")
-def branchPage():
+def commitsPage():
     project = request.args.get('project', type=str)
     branch = request.args.get('branch', type=str)
     query = db.session.query(
@@ -85,7 +85,7 @@ def viewJobs():
     commit = request.args.get('commit', type=str)
     workflow = request.args.get('workflow', type=str)
     jobs = db.session.query(Job).filter(Job.workflowId == workflow).order_by(Job.name).all()
-    return render_template('jobs.html', repo=project.split('/')[-1], branch=branch, commit=commit, jobs=jobs)
+    return render_template('jobs.html', repo=project.split('/')[-1], branch=branch, commit=commit[:7], jobs=jobs)
 
 
 if __name__ == '__main__':
