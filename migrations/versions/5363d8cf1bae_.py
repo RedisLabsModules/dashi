@@ -21,7 +21,7 @@ def upgrade():
     op.create_table('pipeline',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('projectSlug', sa.String(), nullable=True),
-    sa.Column('pipelineId', sa.Integer(), nullable=True),
+    sa.Column('pipelineId', sa.BigInteger(), nullable=True),
     sa.Column('branch', sa.String(), nullable=True),
     sa.Column('revision', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')

@@ -22,7 +22,7 @@ class Commits(db.Model):
 class Pipeline(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     projectSlug = db.Column(db.String, index=True)
-    pipelineId = db.Column(db.Integer, unique=True, index=True)
+    pipelineId = db.Column(db.BigInteger, unique=True, index=True)
     branch = db.Column(db.String, index=True)
     workflowId = db.Column(db.String, unique=True, index=True)
     status = db.Column(db.String)
@@ -65,16 +65,18 @@ def indexPage():
 @app.route("/commits")
 def commitsPage():
     project = request.args.get('project', type=str)
+    project = project.replace('github.com/', '')
     branch = request.args.get('branch', type=str)
     query = db.session.query(
         Commits,
         Pipeline,
     ).filter(
         Commits.branch == branch,
-        Commits.projectSlug == f"{project}/{project}",
+        Commits.projectSlug == project,
         Pipeline.branch == branch,
         Pipeline.revision == Commits.commit
     ).order_by(Commits.id.desc()).all()
+    project = project.split('/')[-1]
     return render_template('commits.html', branch_info=query, repo=project, branch=branch)
 
 
