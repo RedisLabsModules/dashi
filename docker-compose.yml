@@ -1,0 +1,30 @@
+version: '3'
+services:
+  db1:
+    build:
+      context: .
+      dockerfile: ./dockers/db/Dockerfile
+    ports:
+      - "5432:5432"
+
+  service:
+    build:
+      context: .
+      dockerfile: ./dockers/service/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - "DATABASE_URL=postgresql://admin:password@db1:5432"
+    depends_on:
+      - db1
+
+  pqadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "8080:80"
+    environment:
+      - "PGADMIN_DEFAULT_EMAIL=admin@redis.com"
+      - "PGADMIN_DEFAULT_PASSWORD=password"
+      - "PGADMIN_DISABLE_POSTFIX=1"
+      - "PGADMIN_LISTEN_ADDRESS=0.0.0.0"
+      - "PGADMIN_LISTEN_PORT=80"
