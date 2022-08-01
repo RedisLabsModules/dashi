@@ -13,7 +13,7 @@ make setup       # install prerequisites
 endef
 
 PROJECT=dashi
-COMPOSE=docker-compose -p $(PROJECT)
+COMPOSE=docker-compose --env-file .env -p $(PROJECT)
 
 SERVICES=db1 service pqadmin
 
@@ -52,3 +52,7 @@ help:
 	@-rm -f $(HELPFILE)
 
 .PHONY: start up stop down build clean logs test setup help
+
+.EXPORT_ALL_VARIABLES:
+	CIRCLE_CI_TOKEN=${CIRCLE_CI_TOKEN}
+	GITHUB_TOKEN=${GITHUB_TOKEN}
