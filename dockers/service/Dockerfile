@@ -8,4 +8,4 @@ RUN python -m pip install -r requirements.txt
 RUN cp -v /app/dockers/service/cron-file /etc/cron.d/cron
 RUN chmod 0644 /etc/cron.d/cron
 RUN crontab /etc/cron.d/cron
-ENTRYPOINT ["/bin/bash", "/app/dockers/service/entrypoint.sh"]
+ENTRYPOINT ["/app/dockers/service/entrypoint.sh"]
