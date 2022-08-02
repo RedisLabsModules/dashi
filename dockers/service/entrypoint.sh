@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 PATH=$PATH:/usr/local/bin
 
@@ -8,6 +8,13 @@ until pg_isready -h $DB_HOST; do
 	echo "Waiting for db ${DB_HOST} ..."
 	sleep 1
 done
-flask db upgrade
+
+if [[ "${GITHUB_TOKEN}" = "" ]]; then
+  flask db upgrade
+else
+  until curl http://service:5000 -s -f -o /dev/null; do
+      echo "wait until service is up..."
+  done
+fi
 
 exec "$@"
