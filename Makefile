@@ -15,7 +15,7 @@ endef
 PROJECT=dashi
 COMPOSE=docker-compose --env-file .env -p $(PROJECT)
 
-SERVICES=db webapp gather pqadmin
+SERVICES=db app gather pqadmin
 
 start up:
 	@$(COMPOSE) up -d
