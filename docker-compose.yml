@@ -1,38 +1,36 @@
 version: '3'
 services:
-  db1:
+  db:
     build:
       context: .
       dockerfile: ./dockers/db/Dockerfile
     ports:
       - "5432:5432"
 
-  service:
+  webapp:
     build:
       context: .
       dockerfile: ./dockers/service/Dockerfile
-    image: local/cidashboard
     ports:
       - "5000:5000"
     environment:
       - "DATABASE_URL=${DATABASE_URL}"
     command: "flask run --host=0.0.0.0"
     depends_on:
-      - db1
+      - db
 
-  crontab:
+  gather:
     build:
       context: .
       dockerfile: ./dockers/service/Dockerfile
-    image: local/cidashboard:latest
     environment:
       - "DATABASE_URL=${DATABASE_URL}"
       - "CIRCLE_CI_TOKEN=${CIRCLE_CI_TOKEN}"
       - "GITHUB_TOKEN=${GITHUB_TOKEN}"
     command: "cron -f"
     depends_on:
-      - db1
-      - service
+      - db
+      - webapp
 
   pqadmin:
     image: dpage/pgadmin4
