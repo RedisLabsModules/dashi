@@ -2,6 +2,8 @@
 define HELPTEXT
 make start       # start containers
 make stop        # stop and remove containers
+make dump        # create dump.sql from db container
+make restore     # cleanup admin db in db container and apply dump.sql dump to admin db
 make build       # build containers but don't start
   SERVICE=name     # build service `name`
 make clean       # remove containers
@@ -28,6 +30,10 @@ build:
 
 clean:
 	@$(COMPOSE) rm
+dump:
+	@$(COMPOSE) exec db pg_dump -h localhost -Uadmin -d admin --clean > dump.sql
+restore:
+	@$(COMPOSE) exec -T db psql -h localhost -Uadmin -d admin < dump.sql
 ifeq ($(ALL),1)
 	@docker rmi -f $(addprefix $(PROJECT)_,$(SERVICES))
 endif
