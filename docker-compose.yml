@@ -1,0 +1,46 @@
+version: '3'
+services:
+  db:
+    build:
+      context: .
+      dockerfile: ./dockers/db/Dockerfile
+    ports:
+      - "5432:5432"
+
+  app:
+    build:
+      context: .
+      dockerfile: ./dockers/app/Dockerfile
+    image: dashi_app
+    ports:
+      - "5000:5000"
+    environment:
+      - "DATABASE_URL=${DATABASE_URL}"
+    command: "flask run --host=0.0.0.0"
+    depends_on:
+      - db
+
+  gather:
+    build:
+      context: .
+      dockerfile: ./dockers/app/Dockerfile
+    image: dashi_app
+    environment:
+      - "DATABASE_URL=${DATABASE_URL}"
+      - "CIRCLE_CI_TOKEN=${CIRCLE_CI_TOKEN}"
+      - "GITHUB_TOKEN=${GITHUB_TOKEN}"
+    command: "cron -f"
+    depends_on:
+      - db
+      - app
+
+  pqadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "8080:80"
+    environment:
+      - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}"
+      - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}"
+      - "PGADMIN_DISABLE_POSTFIX=${PGADMIN_DISABLE_POSTFIX}"
+      - "PGADMIN_LISTEN_ADDRESS=${PGADMIN_LISTEN_ADDRESS}"
+      - "PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}"
