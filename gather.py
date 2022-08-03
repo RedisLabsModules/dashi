@@ -5,7 +5,7 @@ import requests
 import yaml
 from flask_sqlalchemy import SQLAlchemy
 
-from app import Pipeline, app, Commits
+from app import Pipeline, app, Commits, Job
 
 db = SQLAlchemy(app)
 allowed_statuses = ['success', 'failed']
@@ -27,7 +27,6 @@ def getCommits(repo: str, gh_branch: str):
     response = requests.request("GET", url, headers=headers, data=payload)
     response_json = json.loads(response.text)
     for commit in response_json:
-        print(commit['sha'], commit['commit']['message'])
         if (str(gh_branch), commit['sha'], repo) not in db_commits:
             new_commit = Commits()
             new_commit.branch = gh_branch
@@ -68,11 +67,93 @@ def circleCiGetWorkflowInfo(workflow_id: str) -> dict:
 
     response = requests.request("GET", url, headers=headers)
     response = json.loads(response.text)
-    if len(response['items']) > 1:
-        print(response, len(response['items']))
-    else:
-        print(response)
     return response['items'][0]
+
+
+def circleCiGetJobs(workflow_id):
+    url = f"https://circleci.com/api/v2/workflow/{workflow_id}/job"
+    headers = {
+        'Circle-Token': os.getenv('CIRCLE_CI_TOKEN'),
+    }
+
+    response = requests.request("GET", url, headers=headers)
+    response = json.loads(response.text)
+    return response['items']
+
+
+def circleCiBranchName(vcs: dict) -> str:
+    if 'branch' in vcs:
+        return vcs['branch']
+    if 'tag' in vcs:
+        return vcs['tag']
+
+
+def getGhRuns(repo: str):
+    repo = repo.replace('github/', '')
+    url = f"https://api.github.com/repos/{repo}/actions/runs"
+
+    payload = {}
+    headers = {
+        'Authorization': os.getenv('GITHUB_TOKEN'),
+        'Accept': 'application/vnd.github+json'
+    }
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+    response_json = json.loads(response.text)
+    for workflow in response_json['workflow_runs']:
+        if (workflow['head_branch'], workflow['head_sha'], repo) in db_commits:
+            new_pipeline = Pipeline()
+            new_pipeline.pipelineId = workflow['id']
+            new_pipeline.projectSlug = f"gh/{repo}"
+            new_pipeline.branch = workflow['head_branch']
+            new_pipeline.revision = workflow['head_sha']
+            new_pipeline.workflowId = str(workflow['id'])
+            new_pipeline.workflowName = workflow['name']
+            new_pipeline.status = workflow['conclusion']
+            new_pipeline.message = workflow['head_commit']['message']
+            if workflow['id'] not in pipeline_ids and workflow['conclusion'] in allowed_statuses:
+                db.session.add(new_pipeline)
+                db.session.commit()
+            new_job = Job()
+            new_job.name = workflow['name']
+            new_job.status = workflow['conclusion']
+            new_job.workflowId = workflow['id']
+            if not bool(db.session.query(Job).filter(Job.workflowId == str(workflow['id'])).first()):
+                db.session.add(new_job)
+                db.session.commit()
+
+
+def checkPipeline(pipeline4check: dict, job4check: dict) -> bool:
+    if pipeline4check['number'] not in pipeline_ids and job4check['status'] in allowed_statuses:
+        return True
+    return False
+
+
+def pushPipelineToDB(pipeline4commit: dict, job4commit: dict, branch_name: str):
+    new_pipeline = Pipeline()
+    new_pipeline.pipelineId = pipeline4commit['number']
+    new_pipeline.projectSlug = pipeline4commit['project_slug']
+    new_pipeline.branch = branch_name
+    new_pipeline.revision = pipeline4commit['vcs']['revision']
+    new_pipeline.workflowId = job4commit['id']
+    new_pipeline.workflowName = job4commit['name']
+    new_pipeline.status = job4commit['status']
+    if 'commit' in pipeline4commit['vcs']:
+        new_pipeline.message = pipeline4commit['vcs']['commit']['subject']
+    db.session.add(new_pipeline)
+    db.session.commit()
+
+
+def pushJobsToDB(jobs_list: list, jobWorkflow: dict):
+    for job in jobs_list:
+        if job['status'] != 'running':
+            new_job = Job()
+            new_job.name = job['name']
+            new_job.status = job['status']
+            new_job.workflowId = workflow['id']
+            if not bool(db.session.query(Job).filter(Job.workflowId == str(jobWorkflow['id'])).first()):
+                db.session.add(new_job)
+                db.session.commit()
 
 
 with open("main.yaml", "r") as stream:
@@ -87,25 +168,18 @@ with open("main.yaml", "r") as stream:
         project['branches'] = [str(x) for x in project['branches']]
         slug_name = project['github']
         slug_name = slug_name.replace('.com', '')
-        print(slug_name)
         for branch in project['branches']:
             getCommits(slug_name, branch)
         cleanupCommits(slug_name, project['branches'])
-        pipeline_list = circleCiGetPipelineId(slug_name)
-        for pipeline in pipeline_list:
-            job = circleCiGetWorkflowInfo(pipeline['id'])
-            if 'branch' in pipeline['vcs'] and \
-                    pipeline['vcs']['branch'] in project['branches']:
-                new_pipeline = Pipeline()
-                new_pipeline.pipelineId = pipeline['number']
-                new_pipeline.projectSlug = pipeline['project_slug']
-                new_pipeline.branch = pipeline['vcs']['branch']
-                new_pipeline.revision = pipeline['vcs']['revision']
-                new_pipeline.workflowId = job['id']
-                new_pipeline.workflowName = job['name']
-                new_pipeline.status = job['status']
-                if 'commit' in pipeline['vcs']:
-                    new_pipeline.message = pipeline['vcs']['commit']['subject']
-                if pipeline['number'] not in pipeline_ids and job['status'] in allowed_statuses:
-                    db.session.add(new_pipeline)
-                    db.session.commit()
+        # if project is GitHub
+        if len([x for x in project['tests'] if 'githubactions' in x]) != 0:
+            getGhRuns(slug_name)
+        if len([x for x in project['tests'] if 'circleci' in x]) != 0:
+            pipeline_list = circleCiGetPipelineId(slug_name)
+            for pipeline in pipeline_list:
+                workflow = circleCiGetWorkflowInfo(pipeline['id'])
+                if checkPipeline(pipeline, workflow):
+                    branch = circleCiBranchName(pipeline['vcs'])
+                    pushPipelineToDB(pipeline, workflow, branch)
+                    jobs = circleCiGetJobs(workflow['id'])
+                    pushJobsToDB(jobs, workflow)
