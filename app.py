@@ -52,14 +52,16 @@ def indexPage():
         for project in repos:
             project_obj = repos[project]
             project_obj['branches'] = [str(x) for x in project_obj['branches']]
-            statuses = db.session.query(
-                Pipeline.branch,
-                Pipeline.status
-            ).filter(
-                Pipeline.branch.in_(project_obj['branches']),
-                Pipeline.projectSlug == project_obj['github'].replace('github.com', 'gh')
-            ).all()
-            project_obj['statuses'] = {x[0]: x[1] for x in statuses}
+            project_obj['statuses'] = {}
+            for branch in project_obj['branches']:
+                status = db.session.query(
+                    Pipeline.status
+                ).filter(
+                    Pipeline.branch == str(branch),
+                    Pipeline.projectSlug == project_obj['github'].replace('github.com', 'gh')
+                ).order_by(Pipeline.pipelineId.desc()).first()
+                if status is not None:
+                    project_obj['statuses'][branch] = status[0]
             repos[project] = project_obj
         return render_template('index.html', projects=repos)
 
@@ -84,7 +86,7 @@ def commitsPage():
     ).join(
         Commits,
         Pipeline.revision == Commits.commit
-    ).order_by(
+    ).filter(Commits.branch == branch).order_by(
         Commits.id.desc()
     )
     query = query.all()
