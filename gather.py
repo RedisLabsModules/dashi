@@ -77,8 +77,10 @@ def circleCiGetJobs(workflow_id):
     }
 
     response = requests.request("GET", url, headers=headers)
-    response = json.loads(response.text)
-    return response['items']
+    if response.status_code == 404:
+        return []
+    response_json = json.loads(response.text)
+    return response_json['items']
 
 
 def circleCiBranchName(vcs: dict) -> str:
@@ -118,7 +120,8 @@ def getGhRuns(repo: str):
             new_job.name = workflow['name']
             new_job.status = workflow['conclusion']
             new_job.workflowId = workflow['id']
-            if not bool(db.session.query(Job).filter(Job.workflowId == str(workflow['id'])).first()):
+            if not bool(db.session.query(Job).filter(
+                    Job.workflowId == str(workflow['id'], Job.name == workflow['name'])).first()):
                 db.session.add(new_job)
                 db.session.commit()
 
@@ -150,7 +153,7 @@ def pushJobsToDB(jobs_list: list, jobWorkflow: dict):
             new_job = Job()
             new_job.name = job['name']
             new_job.status = job['status']
-            new_job.workflowId = workflow['id']
+            new_job.workflowId = jobWorkflow['id']
             if not bool(db.session.query(Job).filter(Job.workflowId == str(jobWorkflow['id'])).first()):
                 db.session.add(new_job)
                 db.session.commit()

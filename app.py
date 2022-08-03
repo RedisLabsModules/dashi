@@ -3,6 +3,7 @@ import yaml
 from flask import Flask, render_template, request
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import ForeignKey, func
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres:', 'postgresql:')
@@ -29,6 +30,7 @@ class Pipeline(db.Model):
     workflowName = db.Column(db.String)
     revision = db.Column(db.String)
     message = db.Column(db.String)
+    commitId = db.Column(db.Integer, ForeignKey("commits.id"))
 
 
 class Job(db.Model):
@@ -67,15 +69,25 @@ def commitsPage():
     project = request.args.get('project', type=str)
     project = project.replace('github.com/', '')
     branch = request.args.get('branch', type=str)
-    query = db.session.query(
+    subq = db.session.query(
+        Pipeline.projectSlug,
+        func.max(Pipeline.pipelineId).label('maxpipelineid'),
+        Pipeline.revision,
+    ).filter(Pipeline.projectSlug == f"gh/{project}").group_by(Pipeline.projectSlug, Pipeline.revision).subquery('t2')
+    query = db.session.query(Commits, Pipeline).join(
+        subq,
+        db.and_(
+            Pipeline.projectSlug == subq.c.projectSlug,
+            Pipeline.pipelineId == subq.c.maxpipelineid,
+            Pipeline.revision == subq.c.revision,
+        )
+    ).join(
         Commits,
-        Pipeline,
-    ).filter(
-        Commits.branch == branch,
-        Commits.projectSlug == project,
-        Pipeline.branch == branch,
         Pipeline.revision == Commits.commit
-    ).order_by(Commits.id.desc()).all()
+    ).order_by(
+        Commits.id.desc()
+    )
+    query = query.all()
     project = project.split('/')[-1]
     return render_template('commits.html', branch_info=query, repo=project, branch=branch)
 

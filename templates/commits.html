@@ -27,7 +27,7 @@
 <tbody>
     {% for commit in branch_info %}
         <tr>
-            <th scope="row" class="{% if commit[1].status == 'success' %}bg-success{% else %}bg-danger{% endif %}">{{ commit[0].commit[:7] }}</th>
+            <th scope="row" class="{% if commit[1].status == 'success' %}bg-success {% elif commit[1].status == None %}bg-secondary{% else %}bg-danger{% endif %}">{{ commit[0].commit[:7] }}: {{ commit[1].status }}</th>
             <td>
                 <a href="/jobs?project={{ commit[0].projectSlug }}&branch={{ commit[0].branch }}&commit={{ commit[0].commit }}&workflow={{ commit[1].workflowId }}" class="text-dark">{{ commit[0].message }}</a>
             </td>
