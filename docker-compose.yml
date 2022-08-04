@@ -29,7 +29,8 @@ services:
       - "DATABASE_URL=${DATABASE_URL}"
       - "CIRCLE_CI_TOKEN=${CIRCLE_CI_TOKEN}"
       - "GITHUB_TOKEN=${GITHUB_TOKEN}"
-    command: "cron -f"
+      - "SLEEP_SECONDS=60"
+    command: "/app/dockers/app/gather-start.sh"
     depends_on:
       - db
       - app
