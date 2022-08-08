@@ -25,19 +25,19 @@
 </style>
 <body>
 <div align="center"><h3>{{ repo }}/{{ branch }}/{{ commit }}</h3></div>
-<table class="table">
+<table class="table table-responsive">
     <thead>
     <tr>
         <th scope="col">Workflow name</th>
     </tr>
     </thead>
     <tbody>
-    {% for job in jobs %}
+    {% for pipeline in pipelines %}
         <tr>
             <th scope="row"
-                class="{% if job.status == 'success' %}bg-success{% else %}bg-danger{% endif %}">
-                <a href="https://app.circleci.com/pipelines/github/{{ "/".join(job.projectSlug.split('/')[1:]) }}/{{ job.pipelineId }}/workflows/{{ job.workflowId }}">
-                    {{ job.workflowName }}
+                class="{% if pipeline.status == 'success' %}bg-success{% else %}bg-danger{% endif %}">
+                <a target="_blank" rel="noopener noreferrer" href="https://app.circleci.com/pipelines/github/{{ "/".join(pipeline.projectSlug.split('/')[1:]) }}/{{ pipeline.pipelineId }}/workflows/{{ pipeline.workflowId }}">
+                    {{ pipeline.workflowName }}
                 </a>
             </th>
         </tr>

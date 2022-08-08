@@ -100,8 +100,8 @@ def viewJobs():
     branch = request.args.get('branch', type=str)
     commit = request.args.get('commit', type=str)
     workflow = request.args.get('workflow', type=str)
-    jobs = db.session.query(Pipeline).join(Commits).filter(Pipeline.commitId == Commits.id, Commits.commit == commit, Pipeline.projectSlug == f"gh/{project}").order_by(Pipeline.pipelineId).all()
-    return render_template('workflows.html', repo=project.split('/')[-1], branch=branch, commit=commit[:7], jobs=jobs)
+    pipelines = db.session.query(Pipeline).filter(Pipeline.revision == commit, Pipeline.projectSlug == f"gh/{project}").order_by(Pipeline.pipelineId).all()
+    return render_template('workflows.html', repo=project.split('/')[-1], branch=branch, commit=commit[:7], pipelines=pipelines)
 
 
 if __name__ == '__main__':
