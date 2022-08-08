@@ -94,14 +94,14 @@ def commitsPage():
     return render_template('commits.html', branch_info=query, repo=project, branch=branch)
 
 
-@app.route('/jobs')
+@app.route('/workflows')
 def viewJobs():
     project = request.args.get('project', type=str)
     branch = request.args.get('branch', type=str)
     commit = request.args.get('commit', type=str)
     workflow = request.args.get('workflow', type=str)
-    jobs = db.session.query(Job).filter(Job.workflowId == workflow).order_by(Job.name).all()
-    return render_template('jobs.html', repo=project.split('/')[-1], branch=branch, commit=commit[:7], jobs=jobs)
+    jobs = db.session.query(Pipeline).join(Commits).filter(Pipeline.commitId == Commits.id, Commits.commit == commit, Pipeline.projectSlug == f"gh/{project}").order_by(Pipeline.pipelineId).all()
+    return render_template('workflows.html', repo=project.split('/')[-1], branch=branch, commit=commit[:7], jobs=jobs)
 
 
 if __name__ == '__main__':
