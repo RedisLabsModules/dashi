@@ -30,7 +30,7 @@ def getCommits(repo: str, gh_branch: str):
             new_commit.branch = gh_branch
             new_commit.projectSlug = repo
             new_commit.commit = commit['sha']
-            new_commit.message = commit['commit']['message']
+            new_commit.message = commit['commit']['message'].split("\n\n")[0]
             db.session.add(new_commit)
             db.session.commit()
 
