@@ -22,10 +22,13 @@
         background-color: transparent;
         text-decoration: none;
     }
+    .table-bordered {
+        border: none;
+    }
 </style>
 <body>
 <div align="center"><h3>{{ repo }}/{{ branch }}/{{ commit }}</h3></div>
-<table class="table table-responsive">
+<table class="table table-responsive table-bordered">
     <thead>
     <tr>
         <th scope="col">Workflow name</th>

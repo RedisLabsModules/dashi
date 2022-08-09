@@ -22,10 +22,13 @@
         background-color: transparent;
         text-decoration: none;
     }
+    .table-bordered {
+        border: none;
+    }
 </style>
 <body>
 <div align="center"><h3>{{ repo }}/{{ branch }}</h3></div>
-<table class="table table-responsive">
+<table class="table table-responsive table-bordered">
     <thead>
     <tr>
         <th scope="col">commit</th>
@@ -37,7 +40,7 @@
         <tr>
             <th scope="row"
                 class="{% if commit[1].status == 'success' %}bg-success {% elif commit[1].status == None %}bg-secondary{% else %}bg-danger{% endif %}">
-                <a href="/workflows?project={{ commit[0].projectSlug }}&branch={{ commit[0].branch }}&commit={{ commit[0].commit }}&workflow={{ commit[1].workflowId }}">
+                <a href="/workflows?project={{ commit[0].projectSlug }}&branch={{ commit[0].branch }}&commit={{ commit[0].commit }}">
                     {{ commit[0].commit[:7] }}
                 </a>
             </th>

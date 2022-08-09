@@ -11,8 +11,8 @@ pipeline_ids = [x[0] for x in db.session.query(Pipeline.pipelineId).all()]
 repos = {}
 
 
-def circleCiGetPipelineId(slug: str) -> list:
-    url = f"https://circleci.com/api/v2/project/{slug}/pipeline"
+def circleCiGetPipelineId(slug: str, pipeline_branch: str) -> list:
+    url = f"https://circleci.com/api/v2/project/{slug}/pipeline?branch={pipeline_branch}"
     headers = {
         'Circle-Token': os.getenv('CIRCLE_CI_TOKEN'),
     }
@@ -31,8 +31,10 @@ def circleCiGetWorkflowInfo(workflow_id: str) -> dict:
     }
 
     response = requests.request("GET", url, headers=headers)
-    response = json.loads(response.text)
-    return response['items'][0]
+    response_json = json.loads(response.text)
+    if len(response_json['items']) != 0:
+        return response_json['items'][0]
+    return []
 
 
 def circleCiGetJobs(workflow_id):
@@ -56,6 +58,8 @@ def circleCiBranchName(vcs: dict) -> str:
 
 
 def checkPipeline(pipeline4check: dict, job4check: dict) -> bool:
+    if len(job4check) == 0:
+        return False
     if pipeline4check['number'] not in pipeline_ids and \
             job4check['status'] in allowed_statuses:
         return True
@@ -95,12 +99,12 @@ if __name__ == "__main__":
             slug_name = project['github']
             slug_name = slug_name.replace('.com', '')
             if len([x for x in project['tests'] if 'circleci' in x]) != 0:
-                print(f"Get pipelines for {slug_name}")
-                pipeline_list = circleCiGetPipelineId(slug_name)
-                for pipeline in pipeline_list:
-                    branch = circleCiBranchName(pipeline['vcs'])
-                    if branch in project['branches']:
-                        print(f"Get workflows for {slug_name}: {pipeline['id']}")
+                for branch in project['branches']:
+                    print(f"Get pipelines for {slug_name}: {branch}")
+                    pipeline_list = circleCiGetPipelineId(slug_name, branch)
+                    for pipeline in pipeline_list:
+                        branch = circleCiBranchName(pipeline['vcs'])
+                        print(f"Get workflows for {slug_name}: {branch}: {pipeline['id']}")
                         workflow = circleCiGetWorkflowInfo(pipeline['id'])
                         if checkPipeline(pipeline, workflow):
                             pushPipelineToDB(pipeline, workflow, branch)
