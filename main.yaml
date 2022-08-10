@@ -16,6 +16,17 @@ repos:
     github: github.com/RedisJSON/RedisJSON
     branches:
       - master
+      - 2.2
+      - 2.0
+    tests:
+      - circleci/default-flow
+      - circleci/nightly
+      - opereto
+  RedisJsonHdt:
+    github: github.com/RedisJSON/RedisJsonHdt
+    branches:
+      - master
+      - 2.2
       - 2.0
     tests:
       - circleci/default-flow
@@ -25,16 +36,26 @@ repos:
     github: github.com/RedisGraph/RedisGraph
     branches:
       - master
+      - 2.10
       - 2.8
       - 2.4
     tests:
       - circleci/build_and_package
       - circleci/nightly
       - opereto
+  RedisGears:
+    github: github.com/RedisGears/RedisGears
+    branches:
+      - master
+      - 1.2
+    tests:
+      - circleci/default-flow
+      - opereto
   RedisTimeSeries:
     github: github.com/RedisTimeSeries/RedisTimeSeries
     branches:
       - master
+      - 1.8
       - 1.6
       - 1.4
     tests:
@@ -42,6 +63,40 @@ repos:
       - circleci/nightly
       - circleci/nightly-twice-a-week
       - opereto
+  RedisAI:
+    github: github.com/RedisAI/RedisAI
+    branches:
+      - master
+      - 1.2
+    tests:
+      - circleci/build_and_package
+      - opereto
+  VectorSimilarity:
+    github: github.com/RedisAI/VectorSimilarity
+    branches:
+      - master
+      - 0.4
+      - 0.3
+    tests:
+      - circleci/default_flow
+      - circleci/benchmark_flow
+      - circleci/nightly
+  RedisBloom:
+    github: github.com/RedisBloom/RedisBloom
+    branches:
+      - master
+      - 2.4
+      - 2.2
+      - 2.0
+    tests:
+      - circleci/build_and_package
+      - opereto
+  Redismod:
+    github: github.com/RedisLabsModules/redismod
+    branches:
+      - master
+    tests:
+      - circleci/build_and_package
   redis-docker:
     github: github.com/RedisLabsModules/redis-docker
     branches:
@@ -55,3 +110,10 @@ repos:
       - master
     tests:
       - githubactions/CI
+  Demos/SpyVsSpy:
+    github: github.com/RedisGears/EdgeRealtimeVideoAnalytics
+    branches:
+      - master
+    tests:
+      - circleci/build_and_package
+
