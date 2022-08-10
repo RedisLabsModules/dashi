@@ -3,10 +3,9 @@ import os
 import requests
 import yaml
 from flask_sqlalchemy import SQLAlchemy
-from app import Pipeline, app, Commits, Job
+from app import Pipeline, app, Commits
 
 db = SQLAlchemy(app)
-allowed_statuses = ['success', 'failed']
 pipeline_ids = [x[0] for x in db.session.query(Pipeline.pipelineId).all()]
 repos = {}
 
@@ -34,7 +33,7 @@ def circleCiGetWorkflowInfo(workflow_id: str) -> dict:
     response_json = json.loads(response.text)
     if len(response_json['items']) != 0:
         return response_json['items'][0]
-    return []
+    return {}
 
 
 def circleCiGetJobs(workflow_id):
@@ -57,31 +56,41 @@ def circleCiBranchName(vcs: dict) -> str:
         return vcs['tag']
 
 
-def checkPipeline(pipeline4check: dict, job4check: dict) -> bool:
-    if len(job4check) == 0:
+def updatePipeline(pipeline4check: dict, job4check: dict) -> bool:
+    db_pipelines = db.session.query(Pipeline).filter(Pipeline.pipelineId == pipeline4check['number']).first()
+    if db_pipelines is None:
         return False
-    if pipeline4check['number'] not in pipeline_ids and \
-            job4check['status'] in allowed_statuses:
+    if 'status' not in job4check:
+        return False
+    if db_pipelines.status != job4check['status']:
         return True
     return False
 
 
 def pushPipelineToDB(pipeline4commit: dict, job4commit: dict, branch_name: str):
-    new_pipeline = Pipeline()
-    new_pipeline.pipelineId = pipeline4commit['number']
-    new_pipeline.projectSlug = pipeline4commit['project_slug']
-    new_pipeline.branch = branch_name
-    new_pipeline.revision = pipeline4commit['vcs']['revision']
-    new_pipeline.workflowId = job4commit['id']
-    new_pipeline.workflowName = job4commit['name']
-    new_pipeline.status = job4commit['status']
-    if 'commit' in pipeline4commit['vcs']:
-        new_pipeline.message = pipeline4commit['vcs']['commit']['subject']
-    commits = db.session.query(Commits.id).filter(Commits.commit == pipeline4commit['vcs']['revision'], Commits.projectSlug == pipeline4commit['project_slug'].replace('gh/', '')).all()
-    if len(commits) != 0:
-        new_pipeline.commitId = commits[0][0]
-        db.session.add(new_pipeline)
-        db.session.commit()
+    if 'id' in job4commit:
+        new_pipeline = Pipeline()
+        new_pipeline.pipelineId = pipeline4commit['number']
+        new_pipeline.projectSlug = pipeline4commit['project_slug']
+        new_pipeline.branch = branch_name
+        new_pipeline.revision = pipeline4commit['vcs']['revision']
+        new_pipeline.workflowId = job4commit['id']
+        new_pipeline.workflowName = job4commit['name']
+        new_pipeline.status = job4commit['status']
+        if 'commit' in pipeline4commit['vcs']:
+            new_pipeline.message = pipeline4commit['vcs']['commit']['subject']
+        commits = db.session.query(Commits.id).filter(Commits.commit == pipeline4commit['vcs']['revision'], Commits.projectSlug == pipeline4commit['project_slug'].replace('gh/', '')).all()
+        if len(commits) != 0:
+            new_pipeline.commitId = commits[0][0]
+            db.session.add(new_pipeline)
+            db.session.commit()
+
+
+def updatePipelineStatus(updatePipelineObject: dict, updateJob: dict):
+    db.session.query(Pipeline). \
+        filter(Pipeline.id == updatePipelineObject['number']). \
+        update({'status': updateJob['status']})
+    db.session.commit()
 
 
 if __name__ == "__main__":
@@ -106,5 +115,8 @@ if __name__ == "__main__":
                         branch = circleCiBranchName(pipeline['vcs'])
                         print(f"Get workflows for {slug_name}: {branch}: {pipeline['id']}")
                         workflow = circleCiGetWorkflowInfo(pipeline['id'])
-                        if checkPipeline(pipeline, workflow):
-                            pushPipelineToDB(pipeline, workflow, branch)
+                        if updatePipeline(pipeline, workflow):
+                            updatePipelineStatus(pipeline, workflow)
+                        else:
+                            if pipeline['number'] not in pipeline_ids:
+                                pushPipelineToDB(pipeline, workflow, branch)

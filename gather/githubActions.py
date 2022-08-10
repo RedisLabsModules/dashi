@@ -4,7 +4,7 @@ import requests
 import yaml
 from flask_sqlalchemy import SQLAlchemy
 
-from app import Pipeline, app, Commits, Job
+from app import Pipeline, app, Commits
 
 db = SQLAlchemy(app)
 allowed_statuses = ['success', 'failed']

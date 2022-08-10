@@ -1,5 +1,7 @@
 import json
 import os
+from datetime import datetime
+
 import requests
 import yaml
 from flask_sqlalchemy import SQLAlchemy
@@ -14,7 +16,7 @@ repos = {}
 
 def getCommits(repo: str, gh_branch: str):
     repo = repo.replace('github/', '')
-    url = f"https://api.github.com/repos/{repo}/commits?sha={gh_branch}"
+    url = f"https://api.github.com/repos/{repo}/commits?sha={gh_branch}&per_page=100"
 
     payload = {}
     headers = {
@@ -23,6 +25,8 @@ def getCommits(repo: str, gh_branch: str):
     }
 
     response = requests.request("GET", url, headers=headers, data=payload)
+    if response.status_code != 200:
+        return
     response_json = json.loads(response.text)
     for commit in response_json:
         if (str(gh_branch), commit['sha'], repo) not in db_commits:
@@ -31,6 +35,7 @@ def getCommits(repo: str, gh_branch: str):
             new_commit.projectSlug = repo
             new_commit.commit = commit['sha']
             new_commit.message = commit['commit']['message'].split("\n\n")[0]
+            new_commit.date = datetime.strptime(commit['commit']['committer']['date'], '%Y-%m-%dT%H:%M:%SZ').isoformat()
             db.session.add(new_commit)
             db.session.commit()
 
@@ -58,7 +63,7 @@ if __name__ == "__main__":
             slug_name = project['github']
             slug_name = slug_name.replace('.com', '')
             for branch in project['branches']:
-                print(f"Get commits for {slug_name}")
+                print(f"Get commits for {slug_name}: {branch}")
                 getCommits(slug_name, branch)
             print("Cleanup old commits")
             cleanupCommits(slug_name, project['branches'])

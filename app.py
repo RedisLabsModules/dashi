@@ -18,6 +18,7 @@ class Commits(db.Model):
     branch = db.Column(db.String, index=True)
     commit = db.Column(db.String, unique=False, index=True)
     message = db.Column(db.String, unique=False, index=False)
+    date = db.Column(db.TIMESTAMP, unique=False, index=True)
 
 
 class Pipeline(db.Model):
@@ -31,13 +32,6 @@ class Pipeline(db.Model):
     revision = db.Column(db.String)
     message = db.Column(db.String)
     commitId = db.Column(db.Integer, ForeignKey("commits.id"))
-
-
-class Job(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    workflowId = db.Column(db.String, index=True)
-    status = db.Column(db.String)
-    name = db.Column(db.String, index=True)
 
 
 @app.route("/")
@@ -87,7 +81,7 @@ def commitsPage():
         Commits,
         Pipeline.revision == Commits.commit
     ).filter(Commits.branch == branch).order_by(
-        Commits.id.desc()
+        Commits.date.desc()
     )
     query = query.all()
     project = project.split('/')[-1]
