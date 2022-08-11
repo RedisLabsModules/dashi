@@ -39,21 +39,13 @@ def getGhRuns(repo: str):
             if workflow['id'] not in pipeline_ids and workflow['conclusion'] in allowed_statuses:
                 db.session.add(new_pipeline)
                 db.session.commit()
-            new_job = Job()
-            new_job.name = workflow['name']
-            new_job.status = workflow['conclusion']
-            new_job.workflowId = workflow['id']
-            if not bool(db.session.query(Job).filter(
-                    Job.workflowId == str(workflow['id'], Job.name == workflow['name'])).first()):
-                db.session.add(new_job)
-                db.session.commit()
 
 
 if __name__ == "__main__":
     print("Start collecting pipelines and jobs info")
     with open("main.yaml", "r") as stream:
         try:
-            yaml_object = yaml.safe_load(stream)
+            yaml_object = yaml.load(stream, Loader=yaml.BaseLoader)
         except yaml.YAMLError as exc:
             print(exc)
             exit(2)

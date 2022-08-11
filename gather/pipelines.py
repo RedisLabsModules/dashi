@@ -97,7 +97,7 @@ if __name__ == "__main__":
     print("Start collecting pipelines and jobs info")
     with open("main.yaml", "r") as stream:
         try:
-            yaml_object = yaml.safe_load(stream)
+            yaml_object = yaml.load(stream, Loader=yaml.BaseLoader)
         except yaml.YAMLError as exc:
             print(exc)
             exit(2)
