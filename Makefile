@@ -10,6 +10,7 @@ make clean       # remove containers
   ALL=1            # remove images too
 make logs        # show logs
   SERVICE=name     # show logs of service `name`
+  FOLLOW=1         # follow log
 make setup       # install prerequisites
 
 endef
@@ -22,7 +23,7 @@ SERVICES=db app gather pqadmin
 start up:
 	@$(COMPOSE) up -d
 
-stop down:
+stop down: dump
 	@$(COMPOSE) down --remove-orphans
 
 build:
@@ -30,16 +31,22 @@ build:
 
 clean:
 	@$(COMPOSE) rm
-dump:
-	@$(COMPOSE) exec db pg_dump -h localhost -Uadmin -d admin --clean > dump.sql
-restore:
-	@$(COMPOSE) exec -T db psql -h localhost -Uadmin -d admin < dump.sql
 ifeq ($(ALL),1)
 	@docker rmi -f $(addprefix $(PROJECT)_,$(SERVICES))
 endif
 
+dump:
+	@$(COMPOSE) exec db pg_dump -h localhost -Uadmin -d admin --clean > db/dump.sql
+
+restore:
+	@$(COMPOSE) exec -T db psql -h localhost -Uadmin -d admin < db/dump.sql
+
+ifeq ($(FOLLOW),1)
+LOG_FOLLOW=-f
+endif
+
 logs:
-	@$(COMPOSE) logs -f $(SERVICE)
+	@$(COMPOSE) logs $(LOG_FOLLOW) $(SERVICE)
 
 setup:
 	@./sbin/setup
