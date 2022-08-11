@@ -88,7 +88,7 @@ def pushPipelineToDB(pipeline4commit: dict, job4commit: dict, branch_name: str):
 
 def updatePipelineStatus(updatePipelineObject: dict, updateJob: dict):
     db.session.query(Pipeline). \
-        filter(Pipeline.id == updatePipelineObject['number']). \
+        filter(Pipeline.pipelineId == updatePipelineObject['number']). \
         update({'status': updateJob['status']})
     db.session.commit()
 
