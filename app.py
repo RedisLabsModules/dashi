@@ -24,7 +24,7 @@ class Commits(db.Model):
 class Pipeline(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     projectSlug = db.Column(db.String, index=True)
-    pipelineId = db.Column(db.BigInteger, unique=True, index=True)
+    pipelineId = db.Column(db.BigInteger, unique=False, index=True)
     branch = db.Column(db.String, index=True)
     workflowId = db.Column(db.String, unique=True, index=True)
     status = db.Column(db.String)
@@ -97,12 +97,10 @@ def viewJobs():
     for workflow in db.session.query(Pipeline.workflowName).filter(
             Pipeline.revision == commit,
             Pipeline.projectSlug == f"gh/{project}",
-            Pipeline.branch == branch
     ).distinct(Pipeline.workflowName).all():
         id = db.session.query(Pipeline).filter(
             Pipeline.revision == commit,
             Pipeline.projectSlug == f"gh/{project}",
-            Pipeline.branch == branch,
             Pipeline.workflowName == workflow[0]
         ).order_by(Pipeline.pipelineId.desc()).first()
         workflow_pipelines_ids += [id.pipelineId]
@@ -111,7 +109,6 @@ def viewJobs():
     ).filter(
         Pipeline.revision == commit,
         Pipeline.projectSlug == f"gh/{project}",
-        Pipeline.branch == branch,
         Pipeline.pipelineId.in_(workflow_pipelines_ids),
     ).order_by(Pipeline.pipelineId.desc()).all()
     return render_template('workflows.html', repo=project.split('/')[-1], branch=branch, commit=commit[:7],

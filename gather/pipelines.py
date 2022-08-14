@@ -56,7 +56,7 @@ def circleCiBranchName(vcs: dict) -> str:
         return vcs['tag']
 
 
-def updatePipeline(pipeline4check: dict, job4check: dict) -> bool:
+def updatePipelineCheck(pipeline4check: dict, job4check: dict) -> bool:
     db_pipelines = db.session.query(Pipeline).filter(Pipeline.pipelineId == pipeline4check['number']).first()
     if db_pipelines is None:
         return False
@@ -115,7 +115,7 @@ if __name__ == "__main__":
                         branch = circleCiBranchName(pipeline['vcs'])
                         print(f"Get workflows for {slug_name}: {branch}: {pipeline['id']}")
                         workflow = circleCiGetWorkflowInfo(pipeline['id'])
-                        if updatePipeline(pipeline, workflow):
+                        if updatePipelineCheck(pipeline, workflow):
                             updatePipelineStatus(pipeline, workflow)
                         else:
                             if pipeline['number'] not in pipeline_ids:
