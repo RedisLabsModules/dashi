@@ -75,7 +75,7 @@ repos:
   VectorSimilarity:
     github: github.com/RedisAI/VectorSimilarity
     branches:
-      - master
+      - main
       - 0.4
       - 0.3
     tests:
