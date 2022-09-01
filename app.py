@@ -65,13 +65,13 @@ def commitsPage():
     project = request.args.get('project', type=str)
     project = project.replace('github.com/', '')
     branch = request.args.get('branch', type=str)
-    query = db.session.query(Pipeline, Commits).join(Commits, Pipeline.revision == Commits.commit).filter(
-        Pipeline.projectSlug == f"gh/{project}",
-        Pipeline.branch == branch,
+    query = db.session.query(Commits, Pipeline).join(Pipeline, Pipeline.revision == Commits.commit).filter(
+        Commits.projectSlug == project,
+        Commits.branch == branch,
     ).all()
     project = project.split('/')[-1]
     out = {}
-    for pipeline, commit in query:
+    for commit, pipeline in query:
         if pipeline.revision not in out:
             out[pipeline.revision] = [pipeline, commit]
         if pipeline.status != 'success':
