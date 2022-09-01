@@ -65,27 +65,18 @@ def commitsPage():
     project = request.args.get('project', type=str)
     project = project.replace('github.com/', '')
     branch = request.args.get('branch', type=str)
-    subq = db.session.query(
-        Pipeline.projectSlug,
-        func.max(Pipeline.pipelineId).label('maxpipelineid'),
-        Pipeline.revision,
-    ).filter(Pipeline.projectSlug == f"gh/{project}").group_by(Pipeline.projectSlug, Pipeline.revision).subquery('t2')
-    query = db.session.query(Commits, Pipeline).join(
-        subq,
-        db.and_(
-            Pipeline.projectSlug == subq.c.projectSlug,
-            Pipeline.pipelineId == subq.c.maxpipelineid,
-            Pipeline.revision == subq.c.revision,
-        )
-    ).join(
-        Commits,
-        Pipeline.revision == Commits.commit
-    ).filter(Commits.branch == branch).order_by(
-        Commits.date.desc()
-    )
-    query = query.all()
+    query = db.session.query(Pipeline, Commits).join(Commits, Pipeline.revision == Commits.commit).filter(
+        Pipeline.projectSlug == f"gh/{project}",
+        Pipeline.branch == branch,
+    ).all()
     project = project.split('/')[-1]
-    return render_template('commits.html', branch_info=query, repo=project, branch=branch)
+    out = {}
+    for pipeline, commit in query:
+        if pipeline.revision not in out:
+            out[pipeline.revision] = [pipeline, commit]
+        if pipeline.status != 'success':
+            out[pipeline.revision][0].status = pipeline.status
+    return render_template('commits.html', branch_info=out, repo=project, branch=branch)
 
 
 @app.route('/workflows')

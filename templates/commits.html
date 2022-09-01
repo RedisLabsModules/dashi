@@ -27,6 +27,9 @@
     }
 </style>
 <body>
+<button type="button" class="btn btn-primary" onclick="history.back()">
+        Go back
+</button>
 <div align="center"><h3>{{ repo }}/{{ branch }}</h3></div>
 <table class="table table-responsive table-bordered">
     <thead>
@@ -39,13 +42,13 @@
     {% for commit in branch_info %}
         <tr>
             <th scope="row"
-                class="{% if commit[1].status == 'success' %}bg-success {% elif commit[1].status == None %}bg-secondary{% else %}bg-danger{% endif %}">
-                <a href="/workflows?project={{ commit[0].projectSlug }}&branch={{ commit[0].branch }}&commit={{ commit[0].commit }}">
-                    {{ commit[0].commit[:7] }}
+                class="{% if branch_info[commit][0].status == 'success' %}bg-success {% elif branch_info[commit][0].status == None %}bg-secondary{% else %}bg-danger{% endif %}">
+                <a href="/workflows?project={{ repo }}/{{ repo }}&branch={{ branch_info[commit][0].branch }}&commit={{ branch_info[commit][1].commit }}">
+                    {{ branch_info[commit][1].commit[:7] }}
                 </a>
             </th>
             <td>
-                {{ commit[0].message }}
+                {{ branch_info[commit][1].message }}
             </td>
         </tr>
     {% endfor %}
