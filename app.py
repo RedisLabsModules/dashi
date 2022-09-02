@@ -68,7 +68,7 @@ def commitsPage():
     query = db.session.query(Commits, Pipeline).join(Pipeline, Pipeline.revision == Commits.commit).filter(
         Commits.projectSlug == project,
         Commits.branch == branch,
-    ).all()
+    ).order_by(Commits.date.desc()).all()
     project = project.split('/')[-1]
     out = {}
     for commit, pipeline in query:
