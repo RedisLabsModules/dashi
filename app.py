@@ -1,6 +1,8 @@
 import os
+from hashlib import md5
+
 import yaml
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey, func
@@ -8,6 +10,7 @@ from sqlalchemy import ForeignKey, func
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres:', 'postgresql:')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['TOKEN_SALT'] = os.environ.get('TOKEN_SALT')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -104,6 +107,28 @@ def viewJobs():
     ).order_by(Pipeline.pipelineId.desc()).all()
     return render_template('workflows.html', repo=project.split('/')[-1], branch=branch, commit=commit[:7],
                            pipelines=pipelines)
+
+
+@app.route('/callback')
+def callbackFunc():
+    if request.headers.get('X-Token') is not None:
+        hashes = []
+        with open("main.yaml", "r") as stream:
+            try:
+                yaml_object = yaml.load(stream, Loader=yaml.BaseLoader)
+            except yaml.YAMLError as exc:
+                print(exc)
+                exit(2)
+            repos = yaml_object['repos']
+            for project in repos:
+                project_obj = repos[project]
+                if project_obj.get('scripts') is not None and project_obj.get('scripts'):
+                    project_name = project.split('/')[-1]
+                    for branch in project_obj['branches']:
+                        tmp_hash = md5(f"{project_name}-{branch}-{app.config['TOKEN_SALT']}".encode('utf-8')).hexdigest()
+                        hashes.append(tmp_hash)
+        return jsonify({'tokens': hashes})
+    return jsonify({'code': 'Unauthorized request'}), 401
 
 
 if __name__ == '__main__':

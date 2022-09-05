@@ -13,6 +13,7 @@ repos:
       - circleci/nightly
       - circleci/nightly-performance
       - opereto
+    scripts: true
   RedisJSON:
     github: github.com/RedisJSON/RedisJSON
     branches:
