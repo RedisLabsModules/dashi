@@ -30,7 +30,7 @@
 <button type="button" class="btn btn-primary" onclick="history.back()">
         Go back
 </button>
-<div align="center"><h3>{{ repo }}/{{ branch }}</h3></div>
+<div align="center"><h3>{{ repo.split('/')[-1] }}/{{ branch }}</h3></div>
 <table class="table table-responsive table-bordered">
     <thead>
     <tr>
@@ -43,7 +43,7 @@
         <tr>
             <th scope="row"
                 class="{% if branch_info[commit][0].status == 'success' %}bg-success {% elif branch_info[commit][0].status == None %}bg-secondary{% else %}bg-danger{% endif %}">
-                <a href="/workflows?project={{ repo }}/{{ repo }}&branch={{ branch_info[commit][0].branch }}&commit={{ branch_info[commit][1].commit }}">
+                <a href="/workflows?project={{ repo }}&branch={{ branch_info[commit][0].branch }}&commit={{ branch_info[commit][1].commit }}">
                     {{ branch_info[commit][1].commit[:7] }}
                 </a>
             </th>

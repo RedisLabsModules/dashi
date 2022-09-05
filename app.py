@@ -69,7 +69,6 @@ def commitsPage():
         Commits.projectSlug == project,
         Commits.branch == branch,
     ).order_by(Commits.date.desc()).all()
-    project = project.split('/')[-1]
     out = {}
     for commit, pipeline in query:
         if pipeline.revision not in out:
