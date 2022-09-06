@@ -65,11 +65,28 @@ def commitsPage():
     project = request.args.get('project', type=str)
     project = project.replace('github.com/', '')
     branch = request.args.get('branch', type=str)
-    query = db.session.query(Commits, Pipeline).join(Pipeline, Pipeline.revision == Commits.commit).filter(
-        Commits.projectSlug == project,
-        Commits.branch == branch,
-    ).order_by(Commits.date.desc()).all()
     out = {}
+    subq = db.session.query(
+        Pipeline.projectSlug,
+        func.max(Pipeline.pipelineId).label('maxpipelineid'),
+        Pipeline.revision,
+    ).filter(
+        Pipeline.projectSlug == f"gh/{project}",
+        Pipeline.branch == branch,
+    ).group_by(Pipeline.projectSlug, Pipeline.revision).subquery('t2')
+    query = db.session.query(Commits, Pipeline).join(
+        subq,
+        db.and_(
+            Pipeline.projectSlug == subq.c.projectSlug,
+            Pipeline.pipelineId == subq.c.maxpipelineid,
+            Pipeline.revision == subq.c.revision,
+        )
+    ).join(
+        Commits,
+        Pipeline.revision == Commits.commit
+    ).filter(Commits.projectSlug == project, Commits.branch == branch).order_by(
+        Commits.date.desc()
+    )
     for commit, pipeline in query:
         if pipeline.revision not in out:
             out[pipeline.revision] = [pipeline, commit]
