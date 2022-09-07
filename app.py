@@ -66,14 +66,17 @@ def commitsPage():
     project = project.replace('github.com/', '')
     branch = request.args.get('branch', type=str)
     out = {}
+
     subq = db.session.query(
         Pipeline.projectSlug,
         func.max(Pipeline.pipelineId).label('maxpipelineid'),
         Pipeline.revision,
+        Pipeline.workflowName,
     ).filter(
         Pipeline.projectSlug == f"gh/{project}",
         Pipeline.branch == branch,
-    ).group_by(Pipeline.projectSlug, Pipeline.revision).subquery('t2')
+    ).group_by(Pipeline.projectSlug, Pipeline.revision, Pipeline.workflowName).subquery('t2')
+
     query = db.session.query(Commits, Pipeline).join(
         subq,
         db.and_(
@@ -84,7 +87,10 @@ def commitsPage():
     ).join(
         Commits,
         Pipeline.revision == Commits.commit
-    ).filter(Commits.projectSlug == project, Commits.branch == branch).order_by(
+    ).filter(
+        Commits.projectSlug == project,
+        Commits.branch == branch,
+    ).order_by(
         Commits.date.desc()
     )
     for commit, pipeline in query:
