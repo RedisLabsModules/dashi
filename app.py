@@ -48,14 +48,25 @@ def indexPage():
             project_obj['branches'] = [str(x) for x in project_obj['branches']]
             project_obj['statuses'] = {}
             for branch in project_obj['branches']:
-                status = db.session.query(
-                    Pipeline.status
+                last_pipeline_commit = db.session.query(
+                    Pipeline.revision
                 ).filter(
                     Pipeline.branch == str(branch),
                     Pipeline.projectSlug == project_obj['github'].replace('github.com', 'gh')
                 ).order_by(Pipeline.pipelineId.desc()).first()
-                if status is not None:
-                    project_obj['statuses'][branch] = status[0]
+                if last_pipeline_commit is not None and len(last_pipeline_commit) != 0:
+                    fail_count = db.session.query(
+                        Pipeline.status
+                    ).filter(
+                        Pipeline.revision == last_pipeline_commit[0],
+                        Pipeline.status != 'success'
+                    ).count()
+                else:
+                    fail_count = 1
+                if fail_count != 0 and not None:
+                    project_obj['statuses'][branch] = 'failed'
+                else:
+                    project_obj['statuses'][branch] = 'success'
             repos[project] = project_obj
         return render_template('index.html', projects=repos)
 
