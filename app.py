@@ -55,12 +55,20 @@ def indexPage():
                     Pipeline.projectSlug == project_obj['github'].replace('github.com', 'gh')
                 ).order_by(Pipeline.pipelineId.desc()).first()
                 if last_pipeline_commit is not None and len(last_pipeline_commit) != 0:
-                    fail_count = db.session.query(
-                        Pipeline.status
+                    workflows = db.session.query(
+                        Pipeline.status,
+                        Pipeline.workflowName
                     ).filter(
                         Pipeline.revision == last_pipeline_commit[0],
-                        Pipeline.status != 'success'
-                    ).count()
+                    ).order_by(Pipeline.pipelineId.desc()).all()
+                    tmp_statuses = {}
+                    for workflow_status in workflows:
+                        if workflow_status[1] not in tmp_statuses:
+                            tmp_statuses[workflow_status[1]] = workflow_status[0]
+                    if 'failed' in tmp_statuses.values():
+                        fail_count = 1
+                    else:
+                        fail_count = 0
                 else:
                     fail_count = 1
                 if fail_count != 0 and not None:
