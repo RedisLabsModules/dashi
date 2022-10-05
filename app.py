@@ -65,7 +65,7 @@ def indexPage():
                     for workflow_status in workflows:
                         if workflow_status[1] not in tmp_statuses:
                             tmp_statuses[workflow_status[1]] = workflow_status[0]
-                    if 'failed' in tmp_statuses.values():
+                    if 'failed' in tmp_statuses.values() or 'failing' in tmp_statuses.values():
                         fail_count = 1
                     else:
                         fail_count = 0
