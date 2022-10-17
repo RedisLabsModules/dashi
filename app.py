@@ -1,11 +1,12 @@
 import os
-from hashlib import md5
-
+from http import HTTPStatus
 import yaml
 from flask import Flask, render_template, request, jsonify
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey, func
+
+from func.github import Github
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres:', 'postgresql:')
@@ -35,6 +36,15 @@ class Pipeline(db.Model):
     revision = db.Column(db.String)
     message = db.Column(db.String)
     commitId = db.Column(db.Integer, ForeignKey("commits.id"))
+
+
+class Benchmark(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    commitId = db.Column(db.Integer, ForeignKey("commits.id"))
+    workflowId = db.Column(db.String, ForeignKey("pipeline.workflowId"))
+    branch = db.Column(db.String, index=True)
+    status = db.Column(db.String, index=True)
+    testName = db.Column(db.String, index=True)
 
 
 @app.route("/")
@@ -111,24 +121,46 @@ def viewJobs():
 
 @app.route('/callback')
 def callbackFunc():
-    if request.headers.get('X-Token') is not None:
-        hashes = []
-        with open("main.yaml", "r") as stream:
-            try:
-                yaml_object = yaml.load(stream, Loader=yaml.BaseLoader)
-            except yaml.YAMLError as exc:
-                print(exc)
-                exit(2)
-            repos = yaml_object['repos']
-            for project in repos:
-                project_obj = repos[project]
-                if project_obj.get('scripts') is not None and project_obj.get('scripts'):
-                    project_name = project.split('/')[-1]
-                    for branch in project_obj['branches']:
-                        tmp_hash = md5(f"{project_name}-{branch}-{app.config['TOKEN_SALT']}".encode('utf-8')).hexdigest()
-                        hashes.append(tmp_hash)
-        return jsonify({'tokens': hashes})
-    return jsonify({'code': 'Unauthorized request'}), 401
+    if request.headers.get('Github-Token') is None:
+        return jsonify({'code': 'Unauthorized request'}), HTTPStatus.UNAUTHORIZED
+
+    githubObj = Github(request.headers.get('Github-Token'))
+
+    if not githubObj.checkToken():
+        return jsonify({'code': 'Unauthorized request'}), HTTPStatus.UNAUTHORIZED
+    missing_args = githubObj.argsCheck(request.args)
+    if len(missing_args) != 0:
+        return jsonify({'code': f"Missing args: {','.join(missing_args)}"}), HTTPStatus.UNPROCESSABLE_ENTITY
+
+    if not githubObj.checkRepo():
+        return jsonify({
+            'code': f"Repo '{request.args.get('repository')}' is out of token access"}
+        ), HTTPStatus.FORBIDDEN
+
+    if not githubObj.checkStatus():
+        return jsonify({
+            'code': f'wrong status. available statuses: {githubObj.available_statuses}'
+        }), HTTPStatus.UNPROCESSABLE_ENTITY
+
+    if not githubObj.checkWorkflow(db, Pipeline):
+        return jsonify({
+            'code': f'workflow not found: {githubObj.workflowId}'
+        }), HTTPStatus.UNPROCESSABLE_ENTITY
+
+    commitId = db.session.query(
+        Commits.id
+    ).filter(
+        Commits.commit == request.args.get('commit'),
+        Commits.branch == request.args.get('branch')
+    ).order_by(Commits.id.desc()).first()
+    if commitId is None:
+        return jsonify({
+            'code': 'commit was not found'
+        }), HTTPStatus.UNPROCESSABLE_ENTITY
+
+    githubObj.pushToDB(db, Benchmark, commitId[0])
+
+    return jsonify({})
 
 
 if __name__ == '__main__':
