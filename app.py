@@ -98,16 +98,24 @@ def viewJobs():
     branch = request.args.get('branch', type=str)
     commit = request.args.get('commit', type=str)
     workflow_pipelines_ids = []
+    benchmarks = {}
     for workflow in db.session.query(Pipeline.workflowName).filter(
             Pipeline.revision == commit,
             Pipeline.projectSlug == f"gh/{project}",
     ).distinct(Pipeline.workflowName).all():
+        # gathering workflow ids for select pipelines
         id = db.session.query(Pipeline).filter(
             Pipeline.revision == commit,
             Pipeline.projectSlug == f"gh/{project}",
             Pipeline.workflowName == workflow[0]
         ).order_by(Pipeline.pipelineId.desc()).first()
         workflow_pipelines_ids += [id.pipelineId]
+        # gathering benchmarks for workflow
+        benchmarks_db = db.session.query(Benchmark).filter(
+            Benchmark.workflowId == id.workflowId
+        ).all()
+        benchmarks[id.workflowId] = benchmarks_db
+
     pipelines = db.session.query(
         Pipeline
     ).filter(
@@ -115,8 +123,15 @@ def viewJobs():
         Pipeline.projectSlug == f"gh/{project}",
         Pipeline.pipelineId.in_(workflow_pipelines_ids),
     ).order_by(Pipeline.pipelineId.desc()).all()
-    return render_template('workflows.html', repo=project.split('/')[-1], branch=branch, commit=commit[:7],
-                           pipelines=pipelines)
+    # render all info
+    return render_template(
+        'workflows.html',
+        repo=project.split('/')[-1],
+        branch=branch,
+        commit=commit[:7],
+        pipelines=pipelines,
+        benchmarks=benchmarks
+    )
 
 
 @app.route('/callback')

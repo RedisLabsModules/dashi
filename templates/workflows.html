@@ -35,6 +35,7 @@
     <thead>
     <tr>
         <th scope="col">Workflow name</th>
+        {% if benchmarks.__len__ != 0 %}<th scope="col">Benchmark tests</th>{% endif %}
     </tr>
     </thead>
     <tbody>
@@ -46,6 +47,16 @@
                     {{ pipeline.workflowName }}
                 </a>
             </th>
+        {% if benchmarks[pipeline.workflowId] != None %}
+            {% for benchmark in benchmarks[pipeline.workflowId] %}
+                {% if loop.index0 != 0 %} <tr><th></th> {% endif %}
+            <th scope="row"
+                class="{% if benchmark.status == 'success' %}bg-success{% else %}bg-danger{% endif %}">
+                {{ benchmark.testName }}
+            </th>
+                {% if loop.index0 != 0 %} </tr> {% endif %}
+            {% endfor %}
+        {% endif %}
         </tr>
     {% endfor %}
     </tbody>
