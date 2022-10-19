@@ -34,6 +34,8 @@ def circleCiGetWorkflowInfo(workflow_id: str) -> dict:
     if response.status_code == 200:
         if len(response_json['items']) != 0:
             return response_json['items'][0]
+    else:
+        print(f"Request: {url} got response status: {response.status_code} and response body: {response.text}")
     return {}
 
 
