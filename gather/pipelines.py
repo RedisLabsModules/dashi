@@ -31,8 +31,9 @@ def circleCiGetWorkflowInfo(workflow_id: str) -> dict:
 
     response = requests.request("GET", url, headers=headers)
     response_json = json.loads(response.text)
-    if len(response_json['items']) != 0:
-        return response_json['items'][0]
+    if response.status_code == 200:
+        if len(response_json['items']) != 0:
+            return response_json['items'][0]
     return {}
 
 
