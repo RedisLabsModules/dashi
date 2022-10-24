@@ -1,13 +1,17 @@
 import os
+from http import HTTPStatus
 import yaml
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey, func
 
+from func.callback import Callback
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres:', 'postgresql:')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['TOKEN_SALT'] = os.environ.get('TOKEN_SALT')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -32,6 +36,15 @@ class Pipeline(db.Model):
     revision = db.Column(db.String)
     message = db.Column(db.String)
     commitId = db.Column(db.Integer, ForeignKey("commits.id"))
+
+
+class Benchmark(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    commitId = db.Column(db.Integer, ForeignKey("commits.id"))
+    workflowId = db.Column(db.String, ForeignKey("pipeline.workflowId"))
+    branch = db.Column(db.String, index=True)
+    status = db.Column(db.String, index=True)
+    testName = db.Column(db.String, index=True)
 
 
 @app.route("/")
@@ -126,16 +139,24 @@ def viewJobs():
     branch = request.args.get('branch', type=str)
     commit = request.args.get('commit', type=str)
     workflow_pipelines_ids = []
+    benchmarks = {}
     for workflow in db.session.query(Pipeline.workflowName).filter(
             Pipeline.revision == commit,
             Pipeline.projectSlug == f"gh/{project}",
     ).distinct(Pipeline.workflowName).all():
+        # gathering workflow ids for select pipelines
         id = db.session.query(Pipeline).filter(
             Pipeline.revision == commit,
             Pipeline.projectSlug == f"gh/{project}",
             Pipeline.workflowName == workflow[0]
         ).order_by(Pipeline.pipelineId.desc()).first()
         workflow_pipelines_ids += [id.pipelineId]
+        # gathering benchmarks for workflow
+        benchmarks_db = db.session.query(Benchmark).filter(
+            Benchmark.workflowId == id.workflowId
+        ).all()
+        benchmarks[id.workflowId] = benchmarks_db
+
     pipelines = db.session.query(
         Pipeline
     ).filter(
@@ -143,8 +164,59 @@ def viewJobs():
         Pipeline.projectSlug == f"gh/{project}",
         Pipeline.pipelineId.in_(workflow_pipelines_ids),
     ).order_by(Pipeline.pipelineId.desc()).all()
-    return render_template('workflows.html', repo=project.split('/')[-1], branch=branch, commit=commit[:7],
-                           pipelines=pipelines)
+    # render all info
+    return render_template(
+        'workflows.html',
+        repo=project.split('/')[-1],
+        branch=branch,
+        commit=commit[:7],
+        pipelines=pipelines,
+        benchmarks=benchmarks
+    )
+
+
+@app.route('/callback')
+def callbackFunc():
+    if request.headers.get('Github-Token') is None:
+        return jsonify({'code': 'Unauthorized request'}), HTTPStatus.UNAUTHORIZED
+
+    githubObj = Callback(request.headers.get('Github-Token'))
+
+    if not githubObj.checkToken():
+        return jsonify({'code': 'Unauthorized request'}), HTTPStatus.UNAUTHORIZED
+    missing_args = githubObj.argsCheck(request.args)
+    if len(missing_args) != 0:
+        return jsonify({'code': f"Missing args: {','.join(missing_args)}"}), HTTPStatus.UNPROCESSABLE_ENTITY
+
+    if not githubObj.checkRepo():
+        return jsonify({
+            'code': f"Repo '{request.args.get('repository')}' is out of token access"}
+        ), HTTPStatus.FORBIDDEN
+
+    if not githubObj.checkStatus():
+        return jsonify({
+            'code': f'wrong status. available statuses: {githubObj.available_statuses}'
+        }), HTTPStatus.UNPROCESSABLE_ENTITY
+
+    if not githubObj.checkWorkflow(db, Pipeline):
+        return jsonify({
+            'code': f'workflow not found: {githubObj.workflowId}'
+        }), HTTPStatus.UNPROCESSABLE_ENTITY
+
+    commitId = db.session.query(
+        Commits.id
+    ).filter(
+        Commits.commit == request.args.get('commit'),
+        Commits.branch == request.args.get('branch')
+    ).order_by(Commits.id.desc()).first()
+    if commitId is None:
+        return jsonify({
+            'code': 'commit was not found'
+        }), HTTPStatus.UNPROCESSABLE_ENTITY
+
+    githubObj.pushToDB(db, Benchmark, commitId[0])
+
+    return jsonify({})
 
 
 if __name__ == '__main__':
