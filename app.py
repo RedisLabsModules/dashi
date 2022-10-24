@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey, func
 
-from func.github import Github
+from func.callback import Callback
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres:', 'postgresql:')
@@ -139,7 +139,7 @@ def callbackFunc():
     if request.headers.get('Github-Token') is None:
         return jsonify({'code': 'Unauthorized request'}), HTTPStatus.UNAUTHORIZED
 
-    githubObj = Github(request.headers.get('Github-Token'))
+    githubObj = Callback(request.headers.get('Github-Token'))
 
     if not githubObj.checkToken():
         return jsonify({'code': 'Unauthorized request'}), HTTPStatus.UNAUTHORIZED

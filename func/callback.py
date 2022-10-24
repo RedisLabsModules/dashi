@@ -4,7 +4,7 @@ import requests
 import yaml
 
 
-class Github:
+class Callback:
     def __init__(self, token: str):
         self.user_orgs = []
         self.repos = []
