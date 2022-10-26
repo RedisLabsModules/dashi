@@ -99,6 +99,12 @@ repos:
       - master
     tests:
       - circleci/build_and_package
+  redismodule-rs:
+    github: https://github.com/RedisLabsModules/redismodule-rs
+    branches:
+      - master
+    tests:
+      - circleci/default-flow
   redis-docker:
     github: github.com/RedisLabsModules/redis-docker
     branches:
