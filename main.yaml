@@ -100,7 +100,7 @@ repos:
     tests:
       - circleci/build_and_package
   redismodule-rs:
-    github: https://github.com/RedisLabsModules/redismodule-rs
+    github: github.com/RedisLabsModules/redismodule-rs
     branches:
       - master
     tests:
