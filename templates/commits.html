@@ -42,7 +42,7 @@
     {% for commit in branch_info %}
         <tr>
             <th scope="row"
-                class="{% if branch_info[commit][0].status == 'success' %}bg-success {% elif branch_info[commit][0].status == None %}bg-secondary{% else %}bg-danger{% endif %}">
+                class="{% if branch_info[commit][0].status == 'success' %}bg-success{% elif branch_info[commit][0].status == 'canceled' %}bg-secondary{% elif branch_info[commit][0].status == None %}bg-secondary{% else %}bg-danger{% endif %}">
                 <a href="/workflows?project={{ repo }}&branch={{ branch_info[commit][0].branch }}&commit={{ branch_info[commit][1].commit }}">
                     {{ branch_info[commit][1].commit[:7] }}
                 </a>
