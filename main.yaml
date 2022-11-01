@@ -18,6 +18,7 @@ repos:
     github: github.com/RedisJSON/RedisJSON
     branches:
       - master
+      - 2.4
       - 2.2
       - 2.0
     tests:
@@ -28,6 +29,7 @@ repos:
     github: github.com/RedisJSON/RedisJsonHdt
     branches:
       - master
+      - 2.4
       - 2.2
       - 2.0
     tests:
@@ -49,6 +51,7 @@ repos:
     github: github.com/RedisGears/RedisGears
     branches:
       - master
+      - 2.0
       - 1.2
     tests:
       - circleci/default-flow
@@ -77,6 +80,7 @@ repos:
     github: github.com/RedisAI/VectorSimilarity
     branches:
       - main
+      - 0.5
       - 0.4
       - 0.3
     tests:
@@ -118,10 +122,21 @@ repos:
       - master
     tests:
       - githubactions/CI
+  Demos/Cats:
+    github: https://github.com/RedisGears/AnimalRecognitionDemo
+    branches:
+      - master
+    tests:
+      - githubactions/Animal Recognition Test
   Demos/SpyVsSpy:
     github: github.com/RedisGears/EdgeRealtimeVideoAnalytics
     branches:
       - master
     tests:
       - circleci/build_and_package
-
+  RedisTimeSeries/prometheus-adapter:
+    github: https://github.com/RedisTimeSeries/prometheus-redistimeseries-adapter
+    branches:
+      - master
+    tests:
+      - circleci/build
