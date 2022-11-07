@@ -19,6 +19,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: 'eu-west-1'
           CDK_DEFAULT_REGION: 'eu-west-1'
+          CDK_DEFAULT_ACCOUNT: '513600691417'
 
       - name: cdk diff
         uses: youyo/aws-cdk-github-actions@v2
@@ -32,6 +33,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: 'eu-west-1'
           CDK_DEFAULT_REGION: 'eu-west-1'
+          CDK_DEFAULT_ACCOUNT: '513600691417'
 
       - name: cdk deploy
         uses: youyo/aws-cdk-github-actions@v2
@@ -46,6 +48,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: 'eu-west-1'
           CDK_DEFAULT_REGION: 'eu-west-1'
+          CDK_DEFAULT_ACCOUNT: '513600691417'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
