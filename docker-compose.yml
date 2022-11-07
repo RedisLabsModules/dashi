@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: ./dockers/db/Dockerfile
+    image: ${REPOSITORY_URI}:${TAG}_db
     ports:
       - "5432:5432"
 
@@ -11,7 +12,7 @@ services:
     build:
       context: .
       dockerfile: ./dockers/app/Dockerfile
-    image: dashi_app
+    image: ${REPOSITORY_URI}:${TAG}
     ports:
       - "5000:5000"
     environment:
@@ -24,7 +25,7 @@ services:
     build:
       context: .
       dockerfile: ./dockers/app/Dockerfile
-    image: dashi_app
+    image: ${REPOSITORY_URI}:${TAG}
     environment:
       - "DATABASE_URL=${DATABASE_URL}"
       - "CIRCLE_CI_TOKEN=${CIRCLE_CI_TOKEN}"
