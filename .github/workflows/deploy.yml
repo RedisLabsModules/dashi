@@ -87,15 +87,16 @@ jobs:
           target: "docker-compose.yml"
 
       - name: stop script if command error
-          uses: appleboy/ssh-action@master
-          with:
-            host: ${{ env.DASHI_IP }}
-            username: ${{ secrets.DASHI_USERNAME }}
-            port: ${{ secrets.DASHI_PORT }}
-            key: ${{ secrets.DASHI_KEY }}
-            script_stop: true
-            script: |
-              docker-compose up -d
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.DASHI_IP }}
+          username: ${{ secrets.DASHI_USERNAME }}
+          port: ${{ secrets.DASHI_PORT }}
+          key: ${{ secrets.DASHI_KEY }}
+          script_stop: true
+          script: |
+            docker-compose up -d
+
       - name: cdk deploy
         working-directory: cdk
         env:
