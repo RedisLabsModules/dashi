@@ -2,7 +2,7 @@ from aws_cdk import (
     Stack,
     aws_ec2 as ec2,
     aws_ecr as ecr,
-    CfnOutput,
+    CfnOutput, RemovalPolicy,
 )
 from constructs import Construct
 
@@ -84,6 +84,7 @@ class CdkStack(Stack):
                                            )
         docker_repository.add_lifecycle_rule(max_image_count=10, description="Limit images count")
         docker_repository.grant_pull(dashi_instance)
+        docker_repository.apply_removal_policy(RemovalPolicy.DESTROY)
 
         CfnOutput(self, "DashiRepo", value=docker_repository.repository_uri)
 
