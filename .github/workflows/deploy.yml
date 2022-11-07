@@ -48,8 +48,8 @@ jobs:
       - name: populate env
         working-directory: cdk
         run: |
-          echo "REPOSITORY_URI=`cat out.json | jq .DashiStack.DashiRepo`" >> $GITHUB_ENV
-          echo "DASHI_IP=`cat out.json | jq .DashiStack.DashiIp`" >> $GITHUB_ENV
+          echo "REPOSITORY_URI=`cat out.json | jq -r .DashiStack.DashiRepo`" >> $GITHUB_ENV
+          echo "DASHI_IP=`cat out.json | jq -r .DashiStack.DashiIp`" >> $GITHUB_ENV
 
 
       - name: Configure AWS credentials
