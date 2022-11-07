@@ -8,10 +8,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: cdk diff
+      - name: cdk bootstrap
         uses: youyo/aws-cdk-github-actions@v2
         with:
           cdk_subcommand: 'bootstrap'
+          cdk_stack: 'DashiStack'
           actions_comment: true
           working_dir: 'cdk'
         env:
