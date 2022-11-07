@@ -68,7 +68,7 @@ class CdkStack(Stack):
                                           device_name="/dev/sda1",
                                           volume=ec2.BlockDeviceVolume.ebs(50)
                                       )],
-                                      key_name="tokarev-pair",
+                                      key_name="dashi-key",
                                       instance_name="dashi",
                                       security_group=security_group,
                                       user_data=user_data
