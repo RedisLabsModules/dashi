@@ -8,16 +8,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install cdk
+        working-directory: cdk
+        run: |
+          npm install -g aws-cdk
+          pip install -r requirements.txt
+
       - name: cdk bootstrap
-        uses: youyo/aws-cdk-github-actions@v2
-        with:
-          cdk_subcommand: '--stack DashiStack bootstrap'
-          actions_comment: true
-          working_dir: 'cdk'
+        working-directory: cdk
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: 'eu-west-1'
+        run: |
+          cdk bootstrap
 
       - name: cdk diff
         uses: youyo/aws-cdk-github-actions@v2
