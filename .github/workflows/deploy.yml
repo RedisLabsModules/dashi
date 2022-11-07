@@ -23,7 +23,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ DEFAULT_REGION }}
+          AWS_DEFAULT_REGION: ${{ env.DEFAULT_REGION }}
         run: |
           cdk bootstrap
 
@@ -32,7 +32,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ DEFAULT_REGION }}
+          AWS_DEFAULT_REGION: ${{ env.DEFAULT_REGION }}
         run: |
           cdk --stack DashiStack diff 
 
@@ -41,7 +41,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ DEFAULT_REGION }}
+          AWS_DEFAULT_REGION: ${{ env.DEFAULT_REGION }}
         run: |
           cdk --stack DashiStack deploy --require-approval never --outputs-file out.json
 
@@ -57,7 +57,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ DEFAULT_REGION }}
+          aws-region: ${{ env.DEFAULT_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
