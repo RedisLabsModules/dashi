@@ -11,7 +11,7 @@ jobs:
       - name: cdk bootstrap
         uses: youyo/aws-cdk-github-actions@v2
         with:
-          cdk_subcommand: 'bootstrap aws://513600691417/eu-west-1'
+          cdk_subcommand: '--stack DashiStack bootstrap'
           actions_comment: true
           working_dir: 'cdk'
         env:
