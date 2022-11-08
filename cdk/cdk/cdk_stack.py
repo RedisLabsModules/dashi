@@ -1,8 +1,9 @@
+import aws_cdk
 from aws_cdk import (
     Stack,
     aws_ec2 as ec2,
     aws_ecr as ecr,
-    CfnOutput, RemovalPolicy,
+    CfnOutput, RemovalPolicy, aws_route53,
 )
 from constructs import Construct
 
@@ -87,6 +88,18 @@ class CdkStack(Stack):
         docker_repository.add_lifecycle_rule(max_image_count=10, description="Limit images count")
         docker_repository.grant_pull(dashi_instance)
         docker_repository.apply_removal_policy(RemovalPolicy.DESTROY)
+
+        zone = aws_route53.HostedZone.from_lookup(self, "zone",
+                                                  domain_name="cto.redislabs.com"
+                                                  )
+
+        aws_route53.ARecord(self, "dnsRecord",
+                            target=aws_route53.RecordTarget.from_ip_addresses(
+                                elastic_ip.ref),
+                            zone=zone,
+                            record_name="dashi",
+                            ttl=aws_cdk.Duration.minutes(60)
+                            )
 
         CfnOutput(self, "DashiRepo", value=docker_repository.repository_uri)
 
