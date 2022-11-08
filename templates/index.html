@@ -43,7 +43,7 @@
     {% for project in projects %}
         <tr>
             <th scope="row" style="width: 20px;"><a class="project-link" target="_blank" rel="noopener noreferrer" href="https://{{ projects[project]['github'] }}">{{ project }}</a></th>
-            {% for branch in projects[project]['branches']|sort(reverse=True) %}
+            {% for branch in projects[project]['branches'] %}
                 <td
                         class="{% if projects[project]['statuses'][branch] == 'success' %}bg-success{% elif projects[project]['statuses'][branch] == 'canceled' %}bg-secondary{% elif branch not in projects[project]['statuses'] %}{% else %}bg-danger{% endif %}">
                     <a href="/commits?project={{ projects[project]['github'] }}&branch={{ branch }}" style="{% if branch not in projects[project]['statuses'] %}color: black;{% endif %}">{{ branch }}</a>
