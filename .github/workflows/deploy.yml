@@ -96,7 +96,7 @@ jobs:
           key: ${{ secrets.DASHI_KEY }}
           script_stop: true
           script: |
-            cd dashi && docker-compose up -d
+            cd dashi && docker-compose up -d -f docker-compose-run.yml 
 
       - name: cdk deploy
         working-directory: cdk
