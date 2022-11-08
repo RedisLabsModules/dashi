@@ -35,7 +35,7 @@
     <thead>
     <tr>
         <th scope="col">Workflow name</th>
-        {% if benchmarks.__len__ != 0 %}<th scope="col">Benchmark tests</th>{% endif %}
+        {% if benchmarks | length != 0 %}<th scope="col">Benchmark tests</th>{% endif %}
     </tr>
     </thead>
     <tbody>

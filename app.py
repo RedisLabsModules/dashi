@@ -155,7 +155,8 @@ def viewJobs():
         benchmarks_db = db.session.query(Benchmark).filter(
             Benchmark.workflowId == id.workflowId
         ).all()
-        benchmarks[id.workflowId] = benchmarks_db
+        if len(benchmarks_db) != 0:
+            benchmarks[id.workflowId] = benchmarks_db
 
     pipelines = db.session.query(
         Pipeline
