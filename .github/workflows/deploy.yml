@@ -75,6 +75,7 @@ jobs:
         run: |
           docker-compose build
           docker-compose push
+          docker-compose config > docker-compose-run.yml
           
       - name: copy file via ssh key
         uses: appleboy/scp-action@master
@@ -83,8 +84,8 @@ jobs:
           username: ${{ secrets.DASHI_USERNAME }}
           port: ${{ secrets.DASHI_PORT }}
           key: ${{ secrets.DASHI_KEY }}
-          source: "docker-compose.yml"
-          target: "docker-compose.yml"
+          source: "docker-compose-run.yml"
+          target: ""
 
       - name: stop script if command error
         uses: appleboy/ssh-action@master
