@@ -25,6 +25,10 @@ def getGhRuns(repo: str):
 
     response = requests.request("GET", url, headers=headers, data=payload)
     response_json = json.loads(response.text)
+    if response.status_code != 200:
+        print(f"Got not 200 response for repo: {repo}")
+        print(f"Response code: {response.status_code} with body: {response.text}")
+        return
     for workflow in response_json['workflow_runs']:
         if (workflow['head_branch'], workflow['head_sha'], repo) in db_commits:
             new_pipeline = Pipeline()
@@ -54,6 +58,7 @@ if __name__ == "__main__":
             project = yaml_object['repos'][project]
             slug_name = project['github']
             slug_name = slug_name.replace('.com', '')
+            slug_name = slug_name.replace('https://', '')
             if len([x for x in project['tests'] if 'githubactions' in x]) != 0:
                 print(f"Get github actions for {slug_name}")
                 getGhRuns(slug_name)

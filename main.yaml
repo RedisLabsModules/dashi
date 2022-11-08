@@ -123,7 +123,7 @@ repos:
     tests:
       - githubactions/CI
   Demos/Cats:
-    github: https://github.com/RedisGears/AnimalRecognitionDemo
+    github: github.com/RedisGears/AnimalRecognitionDemo
     branches:
       - master
     tests:
@@ -135,7 +135,7 @@ repos:
     tests:
       - circleci/build_and_package
   RedisTimeSeries/prometheus-adapter:
-    github: https://github.com/RedisTimeSeries/prometheus-redistimeseries-adapter
+    github: github.com/RedisTimeSeries/prometheus-redistimeseries-adapter
     branches:
       - master
     tests:
