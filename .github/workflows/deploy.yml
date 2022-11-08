@@ -85,7 +85,7 @@ jobs:
           port: ${{ secrets.DASHI_PORT }}
           key: ${{ secrets.DASHI_KEY }}
           source: "docker-compose-run.yml"
-          target: ""
+          target: "dashi"
 
       - name: stop script if command error
         uses: appleboy/ssh-action@master
@@ -96,7 +96,7 @@ jobs:
           key: ${{ secrets.DASHI_KEY }}
           script_stop: true
           script: |
-            docker-compose up -d
+            cd dashi && docker-compose up -d
 
       - name: cdk deploy
         working-directory: cdk
