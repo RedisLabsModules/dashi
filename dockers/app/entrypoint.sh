@@ -9,7 +9,7 @@ until pg_isready -h $DB_HOST; do
 	sleep 1
 done
 
-if [[ -z $GITHUB_TOKEN ]]; then
+if [[ -z $GH_TOKEN ]]; then
 	flask db upgrade
 else
 	until curl http://app:5000 -s -f -o /dev/null; do

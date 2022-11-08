@@ -7,7 +7,7 @@
 * For running requires env variables:
     * DATABASE_URL - format is `postgresql://$username:$password@$host:$port/$db`
     * CIRCLE_CI_TOKEN
-    * GITHUB_TOKEN - format is `token $token`
+    * GH_TOKEN - format is `token $token`
 
 ## Helpful commands
 

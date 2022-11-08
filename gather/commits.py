@@ -20,7 +20,7 @@ def getCommits(repo: str, gh_branch: str):
 
     payload = {}
     headers = {
-        'Authorization': os.getenv('GITHUB_TOKEN'),
+        'Authorization': os.getenv('GH_TOKEN'),
         'Accept': 'application/vnd.github+json'
     }
 
