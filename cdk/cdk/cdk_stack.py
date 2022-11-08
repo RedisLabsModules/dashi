@@ -55,7 +55,7 @@ class CdkStack(Stack):
                                "/etc/apt/sources.list.d/docker.list > /dev/null")
         user_data.add_commands("chmod a+r /etc/apt/keyrings/docker.gpg")
         user_data.add_commands("apt update")
-        user_data.add_commands("apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin")
+        user_data.add_commands("apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin awscli")
         user_data.add_commands("usermod -a -G docker ubuntu")
         user_data.add_commands("ln -s /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin")
 
