@@ -27,8 +27,8 @@ services:
       dockerfile: ./dockers/nginx/Dockerfile
     image: ${REPOSITORY_URI}:${IMAGE_TAG}_nginx
     volumes:
-      - ./dashi/dashi.crt:/nginx/dashi.crt
-      - ./dashi/dashi.key:/nginx/dashi.key
+      - /home/ubuntu/dashi/dashi.crt:/nginx/dashi.crt
+      - /home/ubuntu/dashi/dashi.key:/nginx/dashi.key
     ports:
       - "80:80"
     depends_on:
