@@ -21,6 +21,19 @@ services:
     depends_on:
       - db
 
+  nginx:
+    build:
+      context: .
+      dockerfile: ./dockers/nginx/Dockerfile
+    image: ${REPOSITORY_URI}:${IMAGE_TAG}_nginx
+    volumes:
+      - ./dashi/dashi.crt:/nginx/dashi.crt
+      - ./dashi/dashi.key:/nginx/dashi.key
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+
   gather:
     build:
       context: .

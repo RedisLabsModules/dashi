@@ -77,6 +77,11 @@ jobs:
           docker-compose push
           docker-compose config > docker-compose-run.yml
           
+      - name: save cert/key
+        run: |
+          echo "${{ secrets.DASHI_SSL_CRT }}" > dashi.crt
+          echo "${{ secrets.DASHI_SSL_KEY }}" > dashi.key
+
       - name: copy file via ssh key
         uses: appleboy/scp-action@master
         with:
@@ -84,7 +89,7 @@ jobs:
           username: ${{ secrets.DASHI_USERNAME }}
           port: ${{ secrets.DASHI_PORT }}
           key: ${{ secrets.DASHI_KEY }}
-          source: "docker-compose-run.yml"
+          source: "docker-compose-run.yml,dashi.crt,dashi.key"
           target: "dashi"
 
       - name: run containers
