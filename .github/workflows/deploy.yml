@@ -87,7 +87,7 @@ jobs:
           source: "docker-compose-run.yml"
           target: "dashi"
 
-      - name: stop script if command error
+      - name: run containers
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.DASHI_IP }}
@@ -98,7 +98,7 @@ jobs:
           script: |
             $(aws ecr get-login --no-include-email --region ${{ env.DEFAULT_REGION }})
             docker-compose -f dashi/docker-compose-run.yml pull
-            docker-compose -f dashi/docker-compose-run.yml up -d 
+            docker-compose -f dashi/docker-compose-run.yml up -d --no-build
 
       - name: cdk deploy to remove tmp ip
         working-directory: cdk
