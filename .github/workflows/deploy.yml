@@ -71,6 +71,8 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ env.REPOSITORY_URI }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          CIRCLE_CI_TOKEN: ${{ secrets.CIRCLE_CI_TOKEN }}
           IMAGE_TAG: latest
         run: |
           docker-compose build

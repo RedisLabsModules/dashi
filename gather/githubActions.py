@@ -19,7 +19,7 @@ def getGhRuns(repo: str):
 
     payload = {}
     headers = {
-        'Authorization': os.getenv('GITHUB_TOKEN'),
+        'Authorization': os.getenv('GH_TOKEN'),
         'Accept': 'application/vnd.github+json'
     }
 
