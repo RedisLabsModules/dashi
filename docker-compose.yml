@@ -44,7 +44,7 @@ services:
       - "DATABASE_URL=${DATABASE_URL}"
       - "CIRCLE_CI_TOKEN=${CIRCLE_CI_TOKEN}"
       - "GITHUB_TOKEN=${GITHUB_TOKEN}"
-      - "SLEEP_SECONDS=60"
+      - "SLEEP_SECONDS=1800"
     command: "/app/dockers/app/gather-start.sh"
     depends_on:
       - db
