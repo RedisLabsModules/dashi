@@ -29,5 +29,9 @@
         ]
       }
     ]
+  },
+  "hosted-zone:account=513600691417:domainName=cto.redislabs.com:region=eu-west-1": {
+    "Id": "/hostedzone/ZK1JLBV34DJVR",
+    "Name": "cto.redislabs.com."
   }
 }

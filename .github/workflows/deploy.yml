@@ -1,7 +1,7 @@
 name: Deploy
 on:
   push:
-    branches: [master]
+    branches: [main]
 env:
   DASHI_IP: placeholder
   REPOSITORY_URI: placeholder
