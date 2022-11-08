@@ -1,0 +1,37 @@
+{
+  "vpc-provider:account=513600691417:filter.isDefault=true:region=eu-west-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-3aedf95c",
+    "vpcCidrBlock": "172.31.0.0/16",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-e2fbaaaa",
+            "cidr": "172.31.16.0/20",
+            "availabilityZone": "eu-west-1a",
+            "routeTableId": "rtb-807648f9"
+          },
+          {
+            "subnetId": "subnet-623ab938",
+            "cidr": "172.31.32.0/20",
+            "availabilityZone": "eu-west-1b",
+            "routeTableId": "rtb-807648f9"
+          },
+          {
+            "subnetId": "subnet-3e430258",
+            "cidr": "172.31.0.0/20",
+            "availabilityZone": "eu-west-1c",
+            "routeTableId": "rtb-807648f9"
+          }
+        ]
+      }
+    ]
+  },
+  "hosted-zone:account=513600691417:domainName=cto.redislabs.com:region=eu-west-1": {
+    "Id": "/hostedzone/ZK1JLBV34DJVR",
+    "Name": "cto.redislabs.com."
+  }
+}

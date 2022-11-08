@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: ./dockers/db/Dockerfile
+    image: ${REPOSITORY_URI}:${IMAGE_TAG}_db
     ports:
       - "5432:5432"
 
@@ -11,7 +12,7 @@ services:
     build:
       context: .
       dockerfile: ./dockers/app/Dockerfile
-    image: dashi_app
+    image: ${REPOSITORY_URI}:${IMAGE_TAG}
     ports:
       - "5000:5000"
     environment:
@@ -20,16 +21,30 @@ services:
     depends_on:
       - db
 
+  nginx:
+    build:
+      context: .
+      dockerfile: ./dockers/nginx/Dockerfile
+    image: ${REPOSITORY_URI}:${IMAGE_TAG}_nginx
+    volumes:
+      - /home/ubuntu/dashi/dashi.crt:/nginx/dashi.crt
+      - /home/ubuntu/dashi/dashi.key:/nginx/dashi.key
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - app
+
   gather:
     build:
       context: .
       dockerfile: ./dockers/app/Dockerfile
-    image: dashi_app
+    image: ${REPOSITORY_URI}:${IMAGE_TAG}
     environment:
       - "DATABASE_URL=${DATABASE_URL}"
       - "CIRCLE_CI_TOKEN=${CIRCLE_CI_TOKEN}"
       - "GITHUB_TOKEN=${GITHUB_TOKEN}"
-      - "SLEEP_SECONDS=60"
+      - "SLEEP_SECONDS=1800"
     command: "/app/dockers/app/gather-start.sh"
     depends_on:
       - db
