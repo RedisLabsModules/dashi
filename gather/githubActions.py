@@ -13,7 +13,7 @@ db_commits = db.session.query(Commits.branch, Commits.commit, Commits.projectSlu
 repos = {}
 
 
-def getGhRuns(repo: str):
+def getGhRuns(repo: str, valid_workflows: list):
     repo = repo.replace('github/', '')
     url = f"https://api.github.com/repos/{repo}/actions/runs"
 
@@ -31,18 +31,19 @@ def getGhRuns(repo: str):
         return
     for workflow in response_json['workflow_runs']:
         if (workflow['head_branch'], workflow['head_sha'], repo) in db_commits:
-            new_pipeline = Pipeline()
-            new_pipeline.pipelineId = workflow['id']
-            new_pipeline.projectSlug = f"gh/{repo}"
-            new_pipeline.branch = workflow['head_branch']
-            new_pipeline.revision = workflow['head_sha']
-            new_pipeline.workflowId = str(workflow['id'])
-            new_pipeline.workflowName = workflow['name']
-            new_pipeline.status = workflow['conclusion']
-            new_pipeline.message = workflow['head_commit']['message']
-            if workflow['id'] not in pipeline_ids and workflow['conclusion'] in allowed_statuses:
-                db.session.add(new_pipeline)
-                db.session.commit()
+            if workflow['name'] in valid_workflows:
+                new_pipeline = Pipeline()
+                new_pipeline.pipelineId = workflow['id']
+                new_pipeline.projectSlug = f"gh/{repo}"
+                new_pipeline.branch = workflow['head_branch']
+                new_pipeline.revision = workflow['head_sha']
+                new_pipeline.workflowId = str(workflow['id'])
+                new_pipeline.workflowName = workflow['name']
+                new_pipeline.status = workflow['conclusion']
+                new_pipeline.message = workflow['head_commit']['message']
+                if workflow['id'] not in pipeline_ids and workflow['conclusion'] in allowed_statuses:
+                    db.session.add(new_pipeline)
+                    db.session.commit()
 
 
 if __name__ == "__main__":
@@ -59,6 +60,7 @@ if __name__ == "__main__":
             slug_name = project['github']
             slug_name = slug_name.replace('.com', '')
             slug_name = slug_name.replace('https://', '')
-            if len([x for x in project['tests'] if 'githubactions' in x]) != 0:
+            valid_github_workflows = [x.split('/')[-1] for x in project['tests'] if 'githubactions' in x]
+            if len(valid_github_workflows) != 0:
                 print(f"Get github actions for {slug_name}")
-                getGhRuns(slug_name)
+                getGhRuns(slug_name, valid_github_workflows)
