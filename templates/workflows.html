@@ -43,7 +43,7 @@
         <tr>
             <th scope="row"
                 class="{% if pipeline.status == 'success' %}bg-success{% elif pipeline.status == 'canceled' %}bg-secondary{% else %}bg-danger{% endif %}">
-                <a target="_blank" rel="noopener noreferrer" href="https://app.circleci.com/pipelines/github/{{ "/".join(pipeline.projectSlug.split('/')[1:]) }}/{{ pipeline.pipelineId }}/workflows/{{ pipeline.workflowId }}">
+                <a target="_blank" rel="noopener noreferrer" href="{{ links[pipeline.pipelineId] }}">
                     {{ pipeline.workflowName }}
                 </a>
             </th>
