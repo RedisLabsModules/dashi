@@ -165,6 +165,15 @@ def viewJobs():
         Pipeline.projectSlug == f"gh/{project}",
         Pipeline.pipelineId.in_(workflow_pipelines_ids),
     ).order_by(Pipeline.pipelineId.desc()).all()
+
+    links = {}
+    for pipeline in pipelines:
+        if len(str(pipeline.pipelineId)) < 14:
+            # we got github pipeline
+            links[pipeline.pipelineId] = f"https://github.com/{'/'.join(pipeline.projectSlug.split('/')[1:])}/actions/runs/{pipeline.pipelineId}"
+        else:
+            # circle ci pipeline
+            links[pipeline.pipelineId] = f"https://app.circleci.com/pipelines/github/{'/'.join(pipeline.projectSlug.split('/')[1:])}/{pipeline.pipelineId}/workflows/{pipeline.workflowId}"
     # render all info
     return render_template(
         'workflows.html',
@@ -172,6 +181,7 @@ def viewJobs():
         branch=branch,
         commit=commit[:7],
         pipelines=pipelines,
+        links=links,
         benchmarks=benchmarks
     )
 
