@@ -23,7 +23,7 @@ def circleCiGetPipelineId(slug: str, pipeline_branch: str) -> list:
     return response['items']
 
 
-def circleCiGetWorkflowInfo(workflow_id: str) -> dict:
+def circleCiGetWorkflowInfo(workflow_id: str, tests: list) -> dict:
     url = f"https://circleci.com/api/v2/pipeline/{workflow_id}/workflow"
     headers = {
         'Circle-Token': os.getenv('CIRCLE_CI_TOKEN'),
@@ -33,7 +33,8 @@ def circleCiGetWorkflowInfo(workflow_id: str) -> dict:
     response_json = json.loads(response.text)
     if response.status_code == 200:
         if len(response_json['items']) != 0:
-            return response_json['items'][0]
+            if response_json['items'][0]['name'] in tests:
+                return response_json['items'][0]
     else:
         print(f"Request: {url} got response status: {response.status_code} and response body: {response.text}")
     return {}
@@ -110,14 +111,15 @@ if __name__ == "__main__":
             project['branches'] = [str(x) for x in project['branches']]
             slug_name = project['github']
             slug_name = slug_name.replace('.com', '')
-            if len([x for x in project['tests'] if 'circleci' in x]) != 0:
+            valid_circle_ci_tests = [x.split('/')[-1] for x in project['tests'] if 'circleci' in x]
+            if len(valid_circle_ci_tests) != 0:
                 for branch in project['branches']:
                     print(f"Get pipelines for {slug_name}: {branch}")
                     pipeline_list = circleCiGetPipelineId(slug_name, branch)
                     for pipeline in pipeline_list:
                         branch = circleCiBranchName(pipeline['vcs'])
                         print(f"Get workflows for {slug_name}: {branch}: {pipeline['id']}")
-                        workflow = circleCiGetWorkflowInfo(pipeline['id'])
+                        workflow = circleCiGetWorkflowInfo(pipeline['id'], valid_circle_ci_tests)
                         if updatePipelineCheck(pipeline, workflow):
                             updatePipelineStatus(pipeline, workflow)
                         else:
