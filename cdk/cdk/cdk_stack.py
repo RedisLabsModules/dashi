@@ -3,8 +3,10 @@ from aws_cdk import (
     Stack,
     aws_ec2 as ec2,
     aws_ecr as ecr,
+    aws_s3 as s3,
     CfnOutput, RemovalPolicy, aws_route53,
 )
+from aws_cdk.aws_s3 import BlockPublicAccess
 from constructs import Construct
 
 
@@ -101,6 +103,14 @@ class CdkStack(Stack):
                             ttl=aws_cdk.Duration.minutes(60)
                             )
 
+        buckup_bucket = s3.Bucket(self, "BuckupBucket",
+                                  bucket_name="redis-dashi-buckup",
+                                  block_public_access=BlockPublicAccess.BLOCK_ALL,
+                                  )
+
+        buckup_bucket.grant_read_write(dashi_instance)
+
         CfnOutput(self, "DashiRepo", value=docker_repository.repository_uri)
 
         CfnOutput(self, "DashiIp", value=elastic_ip.ref)
+        CfnOutput(self, "DashiBuckupBucket", value=buckup_bucket.bucket_name)
