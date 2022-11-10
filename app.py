@@ -168,7 +168,7 @@ def viewJobs():
 
     links = {}
     for pipeline in pipelines:
-        if len(str(pipeline.pipelineId)) < 14:
+        if len(str(pipeline.workflowId)) < 14:
             # we got github pipeline
             links[pipeline.pipelineId] = f"https://github.com/{'/'.join(pipeline.projectSlug.split('/')[1:])}/actions/runs/{pipeline.pipelineId}"
         else:
