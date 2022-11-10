@@ -54,7 +54,7 @@ jobs:
         run: |
           echo "REPOSITORY_URI=`cat out.json | jq -r .DashiStack.DashiRepo`" >> $GITHUB_ENV
           echo "DASHI_IP=`cat out.json | jq -r .DashiStack.DashiIp`" >> $GITHUB_ENV
-          sed -i 's/BUCKUP_BUCKET/`cat out.json | jq -r .DashiStack.DashiBuckupBucket`/g' dockers/app/backup-s3.sh
+          sed -i 's/BUCKUP_BUCKET/`cat out.json | jq -r .DashiStack.DashiBuckupBucket`/g' ../dockers/app/backup-s3.sh
 
 
       - name: Configure AWS credentials
