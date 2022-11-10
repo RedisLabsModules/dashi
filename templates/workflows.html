@@ -42,7 +42,7 @@
     {% for pipeline in pipelines %}
         <tr>
             <th scope="row"
-                class="{% if pipeline.status == 'success' %}bg-success{% elif pipeline.status == 'canceled' %}bg-secondary{% else %}bg-danger{% endif %}">
+                class="{% if pipeline.status == 'success' %}bg-success{% elif pipeline.status == 'running' %}bg-info{% elif pipeline.status == 'canceled' %}bg-secondary{% else %}bg-danger{% endif %}">
                 <a target="_blank" rel="noopener noreferrer" href="{{ links[pipeline.pipelineId] }}">
                     {{ pipeline.workflowName }}
                 </a>
