@@ -4,6 +4,7 @@ on:
     branches: [main]
 env:
   DASHI_IP: placeholder
+  BACKUP_S3: placeholder
   REPOSITORY_URI: placeholder
   DEFAULT_REGION: eu-west-1
 jobs:
@@ -54,8 +55,8 @@ jobs:
         run: |
           echo "REPOSITORY_URI=`cat out.json | jq -r .DashiStack.DashiRepo`" >> $GITHUB_ENV
           echo "DASHI_IP=`cat out.json | jq -r .DashiStack.DashiIp`" >> $GITHUB_ENV
-          BACKUP_BUCKET_VAR=`cat out.json | jq -r .DashiStack.DashiBuckupBucket`
-          sed -i 's/BUCKUP_BUCKET/${BACKUP_BUCKET_VAR}/g' ../dockers/app/backup-s3.sh
+          echo "BACKUP_S3=`cat out.json | jq -r .DashiStack.DashiBuckupBucket`" >> $GITHUB_ENV
+          sed -i 's/BUCKUP_BUCKET/${{ env.BACKUP_S3 }}/g' ../dockers/app/backup-s3.sh
 
 
       - name: Configure AWS credentials
