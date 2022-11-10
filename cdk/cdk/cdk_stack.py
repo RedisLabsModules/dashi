@@ -106,6 +106,8 @@ class CdkStack(Stack):
         buckup_bucket = s3.Bucket(self, "BuckupBucket",
                                   bucket_name="redis-dashi-buckup",
                                   block_public_access=BlockPublicAccess.BLOCK_ALL,
+                                  auto_delete_objects=True,
+                                  removal_policy=RemovalPolicy.DESTROY,
                                   )
 
         buckup_bucket.grant_read_write(dashi_instance)

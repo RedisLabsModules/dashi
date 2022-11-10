@@ -6,7 +6,6 @@ env:
   DASHI_IP: placeholder
   REPOSITORY_URI: placeholder
   DEFAULT_REGION: eu-west-1
-  BUCKUP_S3: placeholder
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -55,7 +54,7 @@ jobs:
         run: |
           echo "REPOSITORY_URI=`cat out.json | jq -r .DashiStack.DashiRepo`" >> $GITHUB_ENV
           echo "DASHI_IP=`cat out.json | jq -r .DashiStack.DashiIp`" >> $GITHUB_ENV
-          echo "BUCKUP_S3=`cat out.json | jq -r .DashiStack.DashiBuckupBucket`" >> $GITHUB_ENV
+          sed -i 's/BUCKUP_BUCKET/`cat out.json | jq -r .DashiStack.DashiBuckupBucket`/g' dockers/app/backup-s3.sh
 
 
       - name: Configure AWS credentials
@@ -93,7 +92,7 @@ jobs:
           username: ${{ secrets.DASHI_USERNAME }}
           port: ${{ secrets.DASHI_PORT }}
           key: ${{ secrets.DASHI_KEY }}
-          source: "docker-compose-run.yml,dashi.crt,dashi.key"
+          source: "docker-compose-run.yml,dashi.crt,dashi.key,dockers/app/backup-s3.sh"
           target: "dashi"
 
       - name: run containers
@@ -108,6 +107,7 @@ jobs:
             $(aws ecr get-login --no-include-email --region ${{ env.DEFAULT_REGION }})
             docker-compose -f dashi/docker-compose-run.yml pull
             docker-compose -f dashi/docker-compose-run.yml up -d --no-build
+            cp dashi/backup-s3.sh /etc/cron.daily/
 
       - name: cdk deploy to remove tmp ip
         working-directory: cdk
