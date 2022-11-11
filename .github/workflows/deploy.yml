@@ -113,7 +113,7 @@ jobs:
             $(aws ecr get-login --no-include-email --region ${{ env.DEFAULT_REGION }})
             docker-compose -f dashi/docker-compose-run.yml pull
             docker-compose -f dashi/docker-compose-run.yml up -d --no-build
-            sudo cp dashi/dockers/app/backup-s3.sh /etc/cron.daily/
+            sudo cp dashi/dockers/app/backup-s3.sh /etc/cron.daily/backup-s3
 
       - name: cdk deploy to remove tmp ip
         working-directory: cdk
