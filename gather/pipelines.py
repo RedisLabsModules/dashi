@@ -68,6 +68,8 @@ def updatePipelineCheck(pipeline4check: dict, job4check: dict) -> bool:
         return False
     if db_pipelines.status != job4check['status']:
         return True
+    if db_pipelines.workflowId != job4check['id']:
+        return True
     return False
 
 
@@ -93,7 +95,7 @@ def pushPipelineToDB(pipeline4commit: dict, job4commit: dict, branch_name: str):
 def updatePipelineStatus(updatePipelineObject: dict, updateJob: dict):
     db.session.query(Pipeline). \
         filter(Pipeline.pipelineId == updatePipelineObject['number']). \
-        update({'status': updateJob['status']})
+        update({'status': updateJob['status'], 'workflowId': updateJob['id']})
     db.session.commit()
 
 
@@ -115,7 +117,7 @@ if __name__ == "__main__":
             if len(valid_circle_ci_tests) != 0:
                 for branch in project['branches']:
                     print(f"Get pipelines for {slug_name}: {branch}")
-                    pipeline_list = circleCiGetPipelineId(slug_name, branch)
+                    pipeline_list =     circleCiGetPipelineId(slug_name, branch)
                     for pipeline in pipeline_list:
                         branch = circleCiBranchName(pipeline['vcs'])
                         print(f"Get workflows for {slug_name}: {branch}: {pipeline['id']}")
