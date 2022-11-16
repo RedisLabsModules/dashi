@@ -117,7 +117,7 @@ if __name__ == "__main__":
             if len(valid_circle_ci_tests) != 0:
                 for branch in project['branches']:
                     print(f"Get pipelines for {slug_name}: {branch}")
-                    pipeline_list =     circleCiGetPipelineId(slug_name, branch)
+                    pipeline_list = circleCiGetPipelineId(slug_name, branch)
                     for pipeline in pipeline_list:
                         branch = circleCiBranchName(pipeline['vcs'])
                         print(f"Get workflows for {slug_name}: {branch}: {pipeline['id']}")
