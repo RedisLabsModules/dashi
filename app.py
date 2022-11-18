@@ -206,7 +206,7 @@ def callbackFunc():
 
     if not githubObj.checkStatus():
         return jsonify({
-            'code': f'wrong status. available statuses: {githubObj.available_statuses}'
+            'code': f'wrong status {githubObj.status}. available statuses: {githubObj.available_statuses}'
         }), HTTPStatus.UNPROCESSABLE_ENTITY
 
     if not githubObj.checkWorkflow(db, Pipeline):

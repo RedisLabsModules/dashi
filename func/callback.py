@@ -19,6 +19,7 @@ class Callback:
             'started',
             'success',
             'canceled',
+            'failed',
         ]
         self.commit = None
         self.required_args = [
