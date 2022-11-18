@@ -41,7 +41,7 @@ class Pipeline(db.Model):
 class Benchmark(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     commitId = db.Column(db.Integer, ForeignKey("commits.id"))
-    workflowId = db.Column(db.String, ForeignKey("pipeline.workflowId"))
+    workflowId = db.Column(db.String, index=True)
     branch = db.Column(db.String, index=True)
     status = db.Column(db.String, index=True)
     testName = db.Column(db.String, index=True)
@@ -207,11 +207,6 @@ def callbackFunc():
     if not githubObj.checkStatus():
         return jsonify({
             'code': f'wrong status {githubObj.status}. available statuses: {githubObj.available_statuses}'
-        }), HTTPStatus.UNPROCESSABLE_ENTITY
-
-    if not githubObj.checkWorkflow(db, Pipeline):
-        return jsonify({
-            'code': f'workflow not found: {githubObj.workflowId}'
         }), HTTPStatus.UNPROCESSABLE_ENTITY
 
     commitId = db.session.query(

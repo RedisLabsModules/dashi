@@ -132,14 +132,3 @@ class Callback:
         if benchmarkId is not None:
             return True
         return False
-
-    def checkWorkflow(self, dbObj, Pipeline):
-        pipeline = dbObj.session.query(
-            Pipeline
-        ).filter(
-            Pipeline.workflowId == self.workflowId,
-            Pipeline.branch == self.branch,
-        ).order_by(Pipeline.id.desc()).first()
-        if pipeline is not None:
-            return True
-        return False
