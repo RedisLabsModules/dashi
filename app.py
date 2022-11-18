@@ -40,7 +40,7 @@ class Pipeline(db.Model):
 
 class Benchmark(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    commitId = db.Column(db.Integer, ForeignKey("commits.id"))
+    commit = db.Column(db.String, index=True)
     workflowId = db.Column(db.String, index=True)
     branch = db.Column(db.String, index=True)
     status = db.Column(db.String, index=True)
@@ -209,18 +209,7 @@ def callbackFunc():
             'code': f'wrong status {githubObj.status}. available statuses: {githubObj.available_statuses}'
         }), HTTPStatus.UNPROCESSABLE_ENTITY
 
-    commitId = db.session.query(
-        Commits.id
-    ).filter(
-        Commits.commit == request.args.get('commit'),
-        Commits.branch == request.args.get('branch')
-    ).order_by(Commits.id.desc()).first()
-    if commitId is None:
-        return jsonify({
-            'code': 'commit was not found'
-        }), HTTPStatus.UNPROCESSABLE_ENTITY
-
-    githubObj.pushToDB(db, Benchmark, commitId[0])
+    githubObj.pushToDB(db, Benchmark)
 
     return jsonify({})
 

@@ -103,10 +103,10 @@ class Callback:
             return True
         return False
 
-    def pushToDB(self, dbObj, benchmark, commitId):
-        if not self.DBRecordExists(dbObj, benchmark, commitId):
+    def pushToDB(self, dbObj, benchmark):
+        if not self.DBRecordExists(dbObj, benchmark):
             new_bench = benchmark()
-            new_bench.commitId = commitId
+            new_bench.commit = self.commit
             new_bench.branch = self.branch
             new_bench.status = self.status
             new_bench.testName = self.test_name
@@ -116,17 +116,17 @@ class Callback:
         else:
             dbObj.session.query(benchmark). \
                 filter(
-                benchmark.commitId == commitId,
+                benchmark.commit == self.commit,
                 benchmark.branch == self.branch,
                 benchmark.testName == self.test_name,
-            ).update({'status': self.status})
+            ).update({'status': self.status, 'workflowId': self.workflowId})
             dbObj.session.commit()
 
-    def DBRecordExists(self, dbObj, benchmark, commitId):
+    def DBRecordExists(self, dbObj, benchmark):
         benchmarkId = dbObj.session.query(
             benchmark.id
         ).filter(
-            benchmark.commitId == commitId,
+            benchmark.commit == self.commit,
             benchmark.branch == self.branch
         ).order_by(benchmark.id.desc()).first()
         if benchmarkId is not None:
