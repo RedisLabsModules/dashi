@@ -23,9 +23,7 @@ class Callback:
         ]
         self.commit = None
         self.required_args = [
-            'branch',
             'repository',
-            'workflowId',
             'commit',
             'test_name',
             'status',
@@ -79,8 +77,6 @@ class Callback:
             if key in self.required_args:
                 self.required_args.remove(key)
             # populate object variables
-            if key == 'branch':
-                self.branch = value
             if key == 'status':
                 self.status = value
             if key == 'test_name':
@@ -89,8 +85,6 @@ class Callback:
                 self.repository = value
             if key == 'commit':
                 self.commit = value
-            if key == 'workflowId':
-                self.workflowId = value
         return self.required_args
 
     def checkRepo(self):
@@ -107,19 +101,16 @@ class Callback:
         if not self.DBRecordExists(dbObj, benchmark):
             new_bench = benchmark()
             new_bench.commit = self.commit
-            new_bench.branch = self.branch
             new_bench.status = self.status
             new_bench.testName = self.test_name
-            new_bench.workflowId = self.workflowId
             dbObj.session.add(new_bench)
             dbObj.session.commit()
         else:
             dbObj.session.query(benchmark). \
                 filter(
                 benchmark.commit == self.commit,
-                benchmark.branch == self.branch,
                 benchmark.testName == self.test_name,
-            ).update({'status': self.status, 'workflowId': self.workflowId})
+            ).update({'status': self.status})
             dbObj.session.commit()
 
     def DBRecordExists(self, dbObj, benchmark):
@@ -127,7 +118,6 @@ class Callback:
             benchmark.id
         ).filter(
             benchmark.commit == self.commit,
-            benchmark.branch == self.branch
         ).order_by(benchmark.id.desc()).first()
         if benchmarkId is not None:
             return True

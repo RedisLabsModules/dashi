@@ -41,8 +41,6 @@ class Pipeline(db.Model):
 class Benchmark(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     commit = db.Column(db.String, index=True)
-    workflowId = db.Column(db.String, index=True)
-    branch = db.Column(db.String, index=True)
     status = db.Column(db.String, index=True)
     testName = db.Column(db.String, index=True)
 
@@ -153,7 +151,7 @@ def viewJobs():
         workflow_pipelines_ids += [id.pipelineId]
         # gathering benchmarks for workflow
         benchmarks_db = db.session.query(Benchmark).filter(
-            Benchmark.workflowId == id.workflowId
+            Benchmark.commit == id.revision
         ).all()
         if len(benchmarks_db) != 0:
             benchmarks[id.workflowId] = benchmarks_db
