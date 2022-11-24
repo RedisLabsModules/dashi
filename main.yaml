@@ -139,4 +139,4 @@ repos:
     branches:
       - master
     tests:
-      - circleci/build
+      - circleci/nightly
