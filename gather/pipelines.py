@@ -6,7 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 from app import Pipeline, app, Commits
 
 db = SQLAlchemy(app)
-pipeline_ids = [x[0] for x in db.session.query(Pipeline.pipelineId).all()]
 repos = {}
 
 
@@ -85,7 +84,11 @@ def pushPipelineToDB(pipeline4commit: dict, job4commit: dict, branch_name: str):
         new_pipeline.status = job4commit['status']
         if 'commit' in pipeline4commit['vcs']:
             new_pipeline.message = pipeline4commit['vcs']['commit']['subject']
-        commits = db.session.query(Commits.id).filter(Commits.commit == pipeline4commit['vcs']['revision'], Commits.projectSlug == pipeline4commit['project_slug'].replace('gh/', '')).all()
+        commits = db.session.query(Commits.id). \
+            filter(
+            Commits.commit == pipeline4commit['vcs']['revision'],
+            Commits.projectSlug == pipeline4commit['project_slug'].replace('gh/', '')
+        ).all()
         if len(commits) != 0:
             new_pipeline.commitId = commits[0][0]
             db.session.add(new_pipeline)
@@ -113,6 +116,8 @@ if __name__ == "__main__":
             project['branches'] = [str(x) for x in project['branches']]
             slug_name = project['github']
             slug_name = slug_name.replace('.com', '')
+            pipeline_ids = [x[0] for x in db.session.query(
+                    Pipeline.pipelineId).filter(Pipeline.projectSlug == slug_name.replace('github', 'gh')).all()]
             valid_circle_ci_tests = [x.split('/')[-1] for x in project['tests'] if 'circleci' in x]
             if len(valid_circle_ci_tests) != 0:
                 for branch in project['branches']:

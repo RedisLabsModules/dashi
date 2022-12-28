@@ -8,7 +8,6 @@ from app import Pipeline, app, Commits
 
 db = SQLAlchemy(app)
 allowed_statuses = ['success', 'failed']
-pipeline_ids = [x[0] for x in db.session.query(Pipeline.pipelineId).all()]
 db_commits = db.session.query(Commits.branch, Commits.commit, Commits.projectSlug).all()
 repos = {}
 
@@ -60,6 +59,8 @@ if __name__ == "__main__":
             slug_name = project['github']
             slug_name = slug_name.replace('.com', '')
             slug_name = slug_name.replace('https://', '')
+            pipeline_ids = [x[0] for x in db.session.query(
+                Pipeline.pipelineId).filter(Pipeline.projectSlug == slug_name.replace('github', 'gh')).all()]
             valid_github_workflows = [x.split('/')[-1] for x in project['tests'] if 'githubactions' in x]
             if len(valid_github_workflows) != 0:
                 print(f"Get github actions for {slug_name}")
