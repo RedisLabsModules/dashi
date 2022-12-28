@@ -30,7 +30,7 @@ class Pipeline(db.Model):
     projectSlug = db.Column(db.String, index=True)
     pipelineId = db.Column(db.BigInteger, unique=False, index=True)
     branch = db.Column(db.String, index=True)
-    workflowId = db.Column(db.String, unique=True, index=True)
+    workflowId = db.Column(db.String, unique=False, index=True)
     status = db.Column(db.String)
     workflowName = db.Column(db.String)
     revision = db.Column(db.String)
