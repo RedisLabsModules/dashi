@@ -6,6 +6,9 @@ on:
       - opened
       - synchronize
 
+env:
+  DEFAULT_REGION: eu-west-1
+
 jobs:
   cdk_diff:
     runs-on: ubuntu-latest
@@ -27,7 +30,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        region: ${{ env.DEFAULT_REGION }}
+        aws-region: ${{ env.DEFAULT_REGION }}
   
     - name: Run CDK Diff
       id: cdk_diff
