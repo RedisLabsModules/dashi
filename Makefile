@@ -16,9 +16,9 @@ make setup       # install prerequisites
 endef
 
 PROJECT=dashi
-COMPOSE=docker-compose --env-file .env -p $(PROJECT)
+COMPOSE=docker-compose -p $(PROJECT)
 
-SERVICES=db app gather pqadmin
+SERVICES=db app sidecar adminer
 
 start up:
 	@$(COMPOSE) up -d
