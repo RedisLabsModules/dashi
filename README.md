@@ -2,4 +2,4 @@
 
 ## Structure
 
-* Project is running on AWS todo
+* To run locally do docker compose start

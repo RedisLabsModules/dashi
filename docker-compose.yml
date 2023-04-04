@@ -27,6 +27,8 @@ services:
     restart: always
     ports:
       - "5001:5000"
+    volumes:
+      - .:/app
     env_file:
       - ./.env
     command: /app/bin/dashi-start.sh
@@ -38,6 +40,8 @@ services:
     build: .
     image: 513600691417.dkr.ecr.eu-west-1.amazonaws.com/dashi-repository:latest
     restart: always
+    volumes:
+      - .:/app
     env_file:
       - ./.env
     command: /app/bin/ci-poller-start.sh

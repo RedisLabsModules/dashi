@@ -1,0 +1,34 @@
+# Ignore files and directories commonly used by Python development
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*$py.class
+
+# Ignore development and testing files
+**/.pytest_cache
+**/.coverage
+**/.cache
+**/.mypy_cache
+**/.vscode
+**/.idea
+**/*.egg-info
+**/.venv
+**/venv
+**/env
+**/envs
+**/*.log
+
+# Ignore local files
+**/settings.py
+**/config.py
+
+# Ignore Docker-specific files and directories
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Ignore other files and directories
+.git
+.gitignore
+*.md

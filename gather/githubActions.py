@@ -18,7 +18,7 @@ def getGhRuns(repo: str, valid_workflows: list):
 
     payload = {}
     headers = {
-        'Authorization': os.getenv('GH_TOKEN'),
+        'Authorization': f"Bearer {os.getenv('GH_TOKEN')}",
         'Accept': 'application/vnd.github+json'
     }
 
