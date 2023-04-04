@@ -1,0 +1,50 @@
+name: CDK Diff on Pull Request
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  cdk_diff:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install AWS CDK
+      run: npm install -g aws-cdk
+
+    - name: Run CDK Diff
+      id: cdk_diff
+      run: |
+        cd cdk
+        pip install -r requirements.txt
+        echo "CDK_DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
+        cdk diff --context githubsha=${{ github.sha }} --require-approval never | tee >(cat - >&2) >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Comment CDK Diff on Pull Request
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `CDK Diff for commit ${{ github.sha }}:\n\`\`\`\n${process.env.CDK_DIFF_OUTPUT}\n\`\`\``;
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output,
+          });

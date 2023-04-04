@@ -15,7 +15,7 @@ from aws_cdk import (
     RemovalPolicy,
 )
 from constructs import Construct
-
+from os import getenv
 
 class DashiStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
@@ -119,6 +119,10 @@ class DashiStack(Stack):
             max_image_count=20, description="Last 20 images"
         )
         dashi_repository.apply_removal_policy(RemovalPolicy.DESTROY)
+
+        image_tag = getenv('GITHUB_SHA', 'latest')
+        container_image = f"{dashi_repository.repository_uri}:{image_tag}"
+
         # Create a Fargate task definition for the Dashi app
         task_definition = ecs.FargateTaskDefinition(
             self,
@@ -130,8 +134,7 @@ class DashiStack(Stack):
         # Add a container to the task definition using the Docker image for the Dashi app
         dashi_container = task_definition.add_container(
             "DashiContainer",
-            # image=ecs.ContainerImage.from_registry("digitalocean/flask-helloworld"),
-            image=ecs.ContainerImage.from_ecr_repository(dashi_repository, "latest"),
+            image=ecs.ContainerImage.from_registry(container_image),
             command=["/app/bin/dashi-start.sh"],
             port_mappings=[ecs.PortMapping(container_port=5000)],
             secrets={
