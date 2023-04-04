@@ -1,5 +1,30 @@
 ---
 repos:
+  RediSearch:
+    github: github.com/RediSearch/RediSearch
+    branches:
+      - master
+      - 2.6
+      - 2.4
+      - 2.2
+      - 2.0
+    tests:
+      - circleci/default-flow
+      - circleci/nightly
+      - circleci/nightly-performance
+    scripts: true
+  RedisJSON:
+    github: github.com/RedisJSON/RedisJSON
+    branches:
+      - master
+      - 2.4
+      - 2.2
+      - 2.0
+      - test-benchmark-async
+    tests:
+      - circleci/default-flow
+      - circleci/nightly
+      - opereto
   RedisJsonHdt:
     github: github.com/RedisJSON/RedisJsonHdt
     branches:
