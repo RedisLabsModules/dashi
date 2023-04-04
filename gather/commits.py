@@ -20,13 +20,12 @@ def getCommits(repo: str, gh_branch: str):
 
     payload = {}
     headers = {
-        'Authorization': os.getenv('GH_TOKEN'),
+        'Authorization': f"Bearer {os.getenv('GH_TOKEN')}",
         'Accept': 'application/vnd.github+json'
     }
-
     response = requests.request("GET", url, headers=headers, data=payload)
     if response.status_code != 200:
-        print(f"Got not 200 response for repo: {repo} with branch: {gh_branch}")
+        print(f"Error retrieving commits: {repo} with branch: {gh_branch}")
         print(f"Response code: {response.status_code} with body: {response.text}")
         return
     response_json = json.loads(response.text)

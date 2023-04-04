@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-import os
 
 import aws_cdk as cdk
+import os
+from cistack.cistack_stack import DashiStack
 
-from cdk.cdk_stack import CdkStack
 
 app = cdk.App()
-CdkStack(app, "DashiStack",
-         env=cdk.Environment(account=os.getenv('CDK_DEFAULT_ACCOUNT'), region=os.getenv('CDK_DEFAULT_REGION')),
-         )
+DashiStack(
+    app,
+    "dashistack",
+    env=cdk.Environment(
+        account=os.getenv("CDK_DEFAULT_ACCOUNT"), region=os.getenv("CDK_DEFAULT_REGION")
+    ),
+)
 
 app.synth()

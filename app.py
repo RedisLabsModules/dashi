@@ -9,7 +9,8 @@ from sqlalchemy import ForeignKey, func
 from func.callback import Callback
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace('postgres:', 'postgresql:')
+# Configure the Flask app to use the database
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{os.environ['DB_USER']}:{os.environ['DB_PASSWORD']}@{os.environ['DB_HOST']}:{os.environ['DB_PORT']}/{os.environ['DB_NAME']}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['TOKEN_SALT'] = os.environ.get('TOKEN_SALT')
 db = SQLAlchemy(app)
@@ -63,7 +64,8 @@ def indexPage():
                     Pipeline.revision
                 ).filter(
                     Pipeline.branch == str(branch),
-                    Pipeline.projectSlug == project_obj['github'].replace('github.com', 'gh')
+                    Pipeline.projectSlug == project_obj['github'].replace(
+                        'github.com', 'gh')
                 ).order_by(Pipeline.pipelineId.desc()).first()
                 if last_pipeline_commit is not None and len(last_pipeline_commit) != 0:
                     workflows = db.session.query(
@@ -75,7 +77,8 @@ def indexPage():
                     tmp_statuses = {}
                     for workflow_status in workflows:
                         if workflow_status[1] not in tmp_statuses:
-                            tmp_statuses[workflow_status[1]] = workflow_status[0]
+                            tmp_statuses[workflow_status[1]
+                                         ] = workflow_status[0]
                     if 'failed' in tmp_statuses.values() or 'failing' in tmp_statuses.values():
                         fail_count = 1
                     else:
