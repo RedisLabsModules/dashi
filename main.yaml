@@ -57,6 +57,7 @@ repos:
     tests:
       - circleci/default-flow
       - opereto
+      - circleci/build_and_package
   RedisTimeSeries:
     github: github.com/RedisTimeSeries/RedisTimeSeries
     branches:
@@ -94,9 +95,8 @@ repos:
       - master
       - 2.4
       - 2.2
-      - 2.0
     tests:
-      - circleci/build_and_package
+      - circleci/default-flow
       - opereto
   Redismod:
     github: github.com/RedisLabsModules/redismod
