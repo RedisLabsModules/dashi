@@ -1,67 +1,61 @@
 version: '3'
 services:
   db:
-    build:
-      context: .
-      dockerfile: ./dockers/db/Dockerfile
-    image: ${REPOSITORY_URI}:${IMAGE_TAG}_db
+    image: "postgres:latest"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    env_file:
+      - ./.env
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     restart: always
     ports:
       - "5432:5432"
 
   app:
-    build:
-      context: .
-      dockerfile: ./dockers/app/Dockerfile
-    image: ${REPOSITORY_URI}:${IMAGE_TAG}
+    build: .
+    image: 513600691417.dkr.ecr.eu-west-1.amazonaws.com/dashi-repository:latest
     restart: always
     ports:
-      - "5000:5000"
-    environment:
-      - "DATABASE_URL=${DATABASE_URL}"
-    command: "flask run --host=0.0.0.0"
+      - "5001:5000"
+    volumes:
+      - .:/app
+    env_file:
+      - ./.env
+    command: /app/bin/dashi-start.sh
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
-  nginx:
-    build:
-      context: .
-      dockerfile: ./dockers/nginx/Dockerfile
-    image: ${REPOSITORY_URI}:${IMAGE_TAG}_nginx
+  sidecar:
+    build: .
+    image: 513600691417.dkr.ecr.eu-west-1.amazonaws.com/dashi-repository:latest
     restart: always
     volumes:
-      - /home/ubuntu/dashi/dashi.crt:/nginx/dashi.crt
-      - /home/ubuntu/dashi/dashi.key:/nginx/dashi.key
-    ports:
-      - "80:80"
-      - "443:443"
+      - .:/app
+    env_file:
+      - ./.env
+    command: /app/bin/ci-poller-start.sh
     depends_on:
-      - app
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
 
-  gather:
-    build:
-      context: .
-      dockerfile: ./dockers/app/Dockerfile
-    image: ${REPOSITORY_URI}:${IMAGE_TAG}
+  adminer:
+    image: adminer
     restart: always
-    environment:
-      - "DATABASE_URL=${DATABASE_URL}"
-      - "CIRCLE_CI_TOKEN=${CIRCLE_CI_TOKEN}"
-      - "GH_TOKEN=${GH_TOKEN}"
-      - "BUCKUP_S3=${BUCKUP_S3}"
-      - "SLEEP_SECONDS=1800"
-    command: "/app/dockers/app/gather-start.sh"
-    depends_on:
-      - db
-      - app
-
-  pqadmin:
-    image: dpage/pgadmin4
     ports:
-      - "8080:80"
-    environment:
-      - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}"
-      - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}"
-      - "PGADMIN_DISABLE_POSTFIX=${PGADMIN_DISABLE_POSTFIX}"
-      - "PGADMIN_LISTEN_ADDRESS=${PGADMIN_LISTEN_ADDRESS}"
-      - "PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}"
+      - "8080:8080"
+
+volumes:
+  pgdata:
