@@ -105,7 +105,7 @@ class DashiStack(Stack):
             zone=route53.HostedZone.from_lookup(
                 self, "DashiZone", domain_name="cto.redislabs.com"
             ),
-            record_name="dashiv2",
+            record_name="dashi",
             target=route53.RecordTarget.from_alias(
                 aws_route53_targets.LoadBalancerTarget(lb)
             ),
