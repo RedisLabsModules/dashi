@@ -26,7 +26,6 @@ repos:
     tests:
       - circleci/default-flow
       - circleci/nightly
-      - opereto
   RedisJsonHdt:
     github: github.com/RedisJSON/RedisJsonHdt
     branches:
@@ -37,7 +36,6 @@ repos:
     tests:
       - circleci/default-flow
       - circleci/nightly
-      - opereto
   RedisGraph:
     github: github.com/RedisGraph/RedisGraph
     branches:
@@ -49,7 +47,6 @@ repos:
     tests:
       - circleci/build_and_package
       - circleci/nightly
-      - opereto
   RedisGears:
     github: github.com/RedisGears/RedisGears
     branches:
@@ -58,7 +55,6 @@ repos:
       - 1.2
     tests:
       - circleci/default-flow
-      - opereto
       - circleci/build_and_package
   RedisTimeSeries:
     github: github.com/RedisTimeSeries/RedisTimeSeries
@@ -71,7 +67,6 @@ repos:
       - circleci/default-flow
       - circleci/nightly
       - circleci/nightly-twice-a-week
-      - opereto
   RedisAI:
     github: github.com/RedisAI/RedisAI
     branches:
@@ -79,7 +74,6 @@ repos:
       - 1.2
     tests:
       - circleci/build_and_package
-      - opereto
   VectorSimilarity:
     github: github.com/RedisAI/VectorSimilarity
     branches:
@@ -100,7 +94,6 @@ repos:
       - 2.2
     tests:
       - circleci/default-flow
-      - opereto
   Redismod:
     github: github.com/RedisLabsModules/redismod
     branches:

@@ -1,7 +1,13 @@
 import json
+import os
 import re
+
 import requests
 import yaml
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+repos_file = os.path.join(parent_dir, "main.yaml")
 
 
 class Callback:
@@ -16,17 +22,17 @@ class Callback:
         self.test_name = None
         self.status = None
         self.available_statuses = [
-            'started',
-            'success',
-            'canceled',
-            'failed',
+            "started",
+            "success",
+            "canceled",
+            "failed",
         ]
         self.commit = None
         self.required_args = [
-            'repository',
-            'commit',
-            'test_name',
-            'status',
+            "repository",
+            "commit",
+            "test_name",
+            "status",
         ]
         self.populateBranches()
 
@@ -38,16 +44,18 @@ class Callback:
             return False
 
         resp_user = requests.get(
-            'https://api.github.com/user/memberships/orgs',
+            "https://api.github.com/user/memberships/orgs",
             headers={
-                'Authorization': f"Bearer {self.token}",
-                'Accept': 'application/vnd.github+json',
-            }
+                "Authorization": f"Bearer {self.token}",
+                "Accept": "application/vnd.github+json",
+            },
         )
         if resp_user.status_code != 200:
             return False
         resp_user_json = json.loads(resp_user.content)
-        self.user_orgs = [x['organization']['login'] for x in resp_user_json if x['state'] == 'active']
+        self.user_orgs = [
+            x["organization"]["login"] for x in resp_user_json if x["state"] == "active"
+        ]
         return True
 
     def checkOrgPermissions(self, org: str) -> bool:
@@ -58,18 +66,20 @@ class Callback:
         return False
 
     def populateBranches(self):
-        with open("main.yaml", "r") as stream:
+        with open(repos_file) as stream:
             try:
                 yaml_object = yaml.load(stream, Loader=yaml.BaseLoader)
             except yaml.YAMLError as exc:
                 print(exc)
                 exit(2)
-            repos = yaml_object['repos']
+            repos = yaml_object["repos"]
             for project in repos:
                 project_obj = repos[project]
-                project_name = project.split('/')[-1]
+                project_name = project.split("/")[-1]
                 self.repos.append(project_name)
-                self.repos_branches[project_name] = [str(x) for x in project_obj['branches']]
+                self.repos_branches[project_name] = [
+                    str(x) for x in project_obj["branches"]
+                ]
 
     def argsCheck(self, args: dict) -> list:
         for key, value in args.items():
@@ -77,13 +87,13 @@ class Callback:
             if key in self.required_args:
                 self.required_args.remove(key)
             # populate object variables
-            if key == 'status':
+            if key == "status":
                 self.status = value
-            if key == 'test_name':
+            if key == "test_name":
                 self.test_name = value
-            if key == 'repository':
+            if key == "repository":
                 self.repository = value
-            if key == 'commit':
+            if key == "commit":
                 self.commit = value
         return self.required_args
 
@@ -106,19 +116,21 @@ class Callback:
             dbObj.session.add(new_bench)
             dbObj.session.commit()
         else:
-            dbObj.session.query(benchmark). \
-                filter(
+            dbObj.session.query(benchmark).filter(
                 benchmark.commit == self.commit,
                 benchmark.testName == self.test_name,
-            ).update({'status': self.status})
+            ).update({"status": self.status})
             dbObj.session.commit()
 
     def DBRecordExists(self, dbObj, benchmark):
-        benchmarkId = dbObj.session.query(
-            benchmark.id
-        ).filter(
-            benchmark.commit == self.commit,
-        ).order_by(benchmark.id.desc()).first()
+        benchmarkId = (
+            dbObj.session.query(benchmark.id)
+            .filter(
+                benchmark.commit == self.commit,
+            )
+            .order_by(benchmark.id.desc())
+            .first()
+        )
         if benchmarkId is not None:
             return True
         return False
