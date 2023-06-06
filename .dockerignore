@@ -19,10 +19,6 @@
 **/envs
 **/*.log
 
-# Ignore local files
-**/settings.py
-**/config.py
-
 # Ignore Docker-specific files and directories
 Dockerfile
 .dockerignore
