@@ -110,6 +110,8 @@ def index():
                     final_status = "running"
                 elif any(status in status_list for status in SUCCESS_STATUSES):
                     final_status = "success"
+                else:
+                    final_status = "Error getting status"
 
                 data[repo.title]["branches"][branch.name] = final_status
             else:
