@@ -23,6 +23,7 @@ FAIL_STATUSES = [
     "failed",
     "failing",
     "cancelled",
+    "canceled",
 ]
 SUCCESS_STATUSES = ["completed", "success", "fixed", "neutral"]
 RUNNING_STATUSES = ["queued", "in_progress", "action_required", "scheduled", "running"]
@@ -111,7 +112,7 @@ def index():
                 elif any(status in status_list for status in SUCCESS_STATUSES):
                     final_status = "success"
                 else:
-                    final_status = "Error getting status"
+                    final_status = "error getting status"
 
                 data[repo.title]["branches"][branch.name] = final_status
             else:
