@@ -59,6 +59,7 @@ class PipelineStatus(db.Model):
     html_url = db.Column(db.String)
     workflow_id = db.Column(db.String, index=True)
     run_number = db.Column(db.String, index=True)
+    workflow_run_id = db.Column(db.String, index=True)
     timestamp = db.Column(db.DateTime)
 
     __table_args__ = (

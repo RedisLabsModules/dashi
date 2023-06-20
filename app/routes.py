@@ -1,14 +1,20 @@
+import re
 from http import HTTPStatus
 
 from flask import Blueprint, jsonify, render_template, request
+from marshmallow import ValidationError
 from sqlalchemy import and_, desc
 
 from . import db
 from .callback import Callback
 from .models import Benchmark, Branch, Commit, Pipeline, PipelineStatus, Repository
+from .schemas import ReportSchema
+from .utils import (
+    fetch_github_module_tests_workflow,
+    fetch_github_module_tests_workflow_jobs,
+)
 
 main = Blueprint("main", __name__)
-
 
 FAIL_STATUSES = [
     "failure",
@@ -20,6 +26,8 @@ FAIL_STATUSES = [
 ]
 SUCCESS_STATUSES = ["completed", "success", "fixed", "neutral"]
 RUNNING_STATUSES = ["queued", "in_progress", "action_required", "scheduled", "running"]
+WORKFLOW_RUN_EVENT_TYPE = "workflow_run"
+QA_TEST_PIPELINES_NAME = "module-tests"
 
 
 @main.route("/")
@@ -140,22 +148,25 @@ def commits():
             "message": commit.message,
             "author": commit.author,
             "date": commit.date,
-            "status": [],
+            "pipeline_status": [],
         }
         for pipeline in pipelines:
-            status = (
+            pipeline_status = (
                 PipelineStatus.query.filter_by(
                     commit_id=commit.id, pipeline_id=pipeline.id
                 )
                 .order_by(PipelineStatus.timestamp.desc())
                 .first()
             )
-            if status is not None:
-                commit_data["status"].append(
+            if pipeline_status is not None:
+                commit_data["pipeline_status"].append(
                     {
-                        "status": status.status,
+                        "status": pipeline_status.status,
+                        "workflow_id": pipeline_status.workflow_id,
+                        "run_number": pipeline_status.run_number,
                         "name": pipeline.name,
-                        "url": status.html_url,
+                        "url": pipeline_status.html_url,
+                        "is_qa_pipeline": pipeline.name == QA_TEST_PIPELINES_NAME,
                     }
                 )
         data.append(commit_data)
@@ -168,20 +179,149 @@ def commits():
     )
 
 
+@main.route("/commits/module-tests", methods=["GET"])
+def module_tests():
+    """
+    Show the details of the QA pipelines
+    """
+    workflow_id = request.args.get("workflow_id", type=str)
+    run_number = request.args.get("run_number", type=str)
+    pipeline_status = (
+        db.session.query(PipelineStatus)
+        .filter_by(
+            workflow_id=str(workflow_id),
+            run_number=str(run_number),
+        )
+        .first()
+    )
+    raw_data = fetch_github_module_tests_workflow_jobs(pipeline_status.workflow_run_id)
+
+    # "test (version, os_name) / test_name" format
+    tests_pattern = re.compile(r"test \(([\d\.]+), (\w+)\) / (\w+)")
+
+    # "os_name test_name version Results" format
+    results_pattern = re.compile(r"(\w+) (\w+) ([\d\.]+) Results")
+
+    patterns = [tests_pattern, results_pattern]
+
+    data = {}
+    for job in raw_data["jobs"]:
+        for pattern in patterns:
+            match = pattern.match(job["name"])
+            if match:
+                if pattern == tests_pattern:
+                    test_name = match.group(3)
+                    version = match.group(1)
+                    os_name = match.group(2)
+                elif pattern == results_pattern:
+                    test_name = match.group(2)
+                    version = match.group(3)
+                    os_name = match.group(1)
+
+                if os_name not in data:
+                    data[os_name] = {}
+
+                if version not in data[os_name]:
+                    data[os_name][version] = {}
+
+                # use test_name as key and store status and html_url
+                data[os_name][version][test_name] = {
+                    "status": job["conclusion"] if job["conclusion"] else job["status"],
+                    "html_url": job["html_url"],
+                }
+                break  # no need to check the remaining patterns
+
+    os_names = list(data.keys())
+    return render_template("workflows.html", data=data, os_names=os_names)
+
+
 @main.route("/webhook", methods=["POST"])
 def webhook():
     event_type = request.headers.get("X-GitHub-Event")
 
-    if event_type == "workflow_run":
+    if event_type == WORKFLOW_RUN_EVENT_TYPE:
         payload = request.json
         workflow_run_id = payload["workflow_run"]["id"]
-        status = payload["workflow_run"]["status"]
-        commit_sha = payload["workflow_run"]["head_sha"]
+        workflow_conclusion = payload["workflow_run"]["conclusion"]
+        workflow_status = payload["workflow_run"]["status"]
+        pipeline_status = (
+            db.session.query(PipelineStatus)
+            .filter_by(
+                workflow_run_id=str(workflow_run_id),
+            )
+            .first()
+        )
+        if pipeline_status:
+            pipeline_status.status = (
+                workflow_conclusion if workflow_conclusion else workflow_status
+            )
+            db.session.commit()
+    return jsonify({"message": "Webhook received"}), 200
 
-    return "Webhook received", 200
+
+@main.route("/report", methods=["POST"])
+def report():
+    """
+    Register QA pipeline
+    """
+    payload = request.get_json()
+
+    try:
+        data = ReportSchema().load(payload)
+        repo_name = data["repo_name"]
+        commit_sha = data["commit_sha"]
+        workflow_run_id = data["workflow_run_id"]
+
+        # Query for the repository with the given name
+        repo = Repository.query.filter_by(title=repo_name).first()
+        if not repo:
+            return jsonify({"message": "Repository not found"}), 404
+
+        # Query for the pipeline with the given name for a selected repo
+        pipeline = (
+            db.session.query(Pipeline)
+            .filter_by(
+                name="module-tests", platform="githubactions", repository_id=repo.id
+            )
+            .first()
+        )
+        if not pipeline:
+            return jsonify({"message": "Pipeline not found"}), 404
+
+        # Query for the commit with the given SHA in the found repository
+        commit = Commit.query.filter(
+            Commit.hash == commit_sha,
+            Commit.branch_id.in_([branch.id for branch in repo.branches]),
+        ).first()
+        if not commit:
+            return jsonify({"message": "Commit not found in the given repository"}), 404
+
+        workflow = fetch_github_module_tests_workflow(workflow_run_id)
+        existing_pipeline_status = (
+            db.session.query(PipelineStatus)
+            .filter_by(
+                workflow_id=str(workflow["workflow_id"]),
+                run_number=str(workflow["run_number"]),
+            )
+            .first()
+        )
+        if existing_pipeline_status:
+            return jsonify({"message": "Workflow run id already exists"}), 400
+        else:
+            pipeline_status = PipelineStatus(
+                pipeline_id=pipeline.id,
+                commit_id=commit.id,
+                workflow_run_id=workflow_run_id,
+                **workflow,
+            )
+            db.session.add(pipeline_status)
+            db.session.commit()
+        return jsonify({"message": "Success"}), 200
+    except ValidationError as e:
+        return jsonify(e.messages), 400
 
 
-# todo legacy, thould be updated
+# todo legacy, should be updated
 @main.route("/callback")
 def callbackFunc():
     if request.headers.get("Github-Token") is None:

@@ -26,6 +26,7 @@ repos:
     tests:
       - circleci/default-flow
       - circleci/nightly
+      - githubactions/module-tests
   RedisJsonHdt:
     github: github.com/RedisJSON/RedisJsonHdt
     branches:

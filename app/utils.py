@@ -2,11 +2,59 @@ import asyncio
 import os
 
 import aiohttp
+import requests
 from flask import current_app as app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.exc import NoResultFound
 
 from . import models
+
+
+def fetch_github_module_tests_workflow_jobs(workflow_run_id: str) -> dict:
+    """
+    Fetch github workflow jobs details using workflow run id
+
+    Args:
+        run_id (str): Run Id of the specific workflow
+
+    Returns:
+        dict: Workflow details for a specific run.
+    """
+    headers = {
+        "Authorization": f"Bearer {os.getenv('GH_TOKEN')}",
+        "Accept": "application/vnd.github+json",
+    }
+    url = f"https://api.github.com/repos/RedisLabs/module-tests/actions/runs/{workflow_run_id}/jobs"
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+
+def fetch_github_module_tests_workflow(run_id: str) -> dict:
+    """
+    Fetch github workflow details using workflow run id
+
+    Args:
+        run_id (str): Run Id of the specific workflow
+
+    Returns:
+        dict: Workflow details for a specific run.
+    """
+    headers = {
+        "Authorization": f"Bearer {os.getenv('GH_TOKEN')}",
+        "Accept": "application/vnd.github+json",
+    }
+    url = f"https://api.github.com/repos/RedisLabs/module-tests/actions/runs/{run_id}"
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+    return {
+        "status": data["conclusion"] if data["conclusion"] else data["status"],
+        "timestamp": data["updated_at"],
+        "html_url": data["html_url"],
+        "workflow_id": str(data["workflow_id"]),
+        "run_number": str(data["run_number"]),
+    }
 
 
 async def fetch_github_commits(
@@ -95,6 +143,7 @@ async def fetch_github_workflow_status(
                             "pipeline_id": pipeline.id,
                             "html_url": run["html_url"],
                             "workflow_id": str(run["workflow_id"]),
+                            "workflow_run_id": str(run["id"]),
                             "run_number": str(run["run_number"]),
                         }
                     )

@@ -1,0 +1,31 @@
+<div class="container py-4">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                {% for os_name in os_names %}
+                <th scope="col">{{ os_name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for version in data[os_names[0]].keys() %}
+            <tr>
+                <th scope="row">{{ version }}</th>
+                {% for os_name in os_names %}
+                <td>
+                    {% for test_name, test_info in data[os_name].get(version, {}).items() %}
+                    {% set status_color = '#28a745' if test_info['status'] == 'success' else '#ffc107' if
+                    test_info['status'] == 'running' else '#dc3545' %}
+                    {% set status_class = 'success' if test_info['status'] == 'success' else 'warning' if
+                    test_info['status'] == 'running' else 'danger' %}
+                    <a href="{{ test_info['html_url'] }}" class="badge badge-{{ status_class }}"
+                        style="background-color: {{ status_color }};">{{ test_name }}</a>
+                    {% endfor %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
