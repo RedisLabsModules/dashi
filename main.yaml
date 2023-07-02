@@ -13,6 +13,7 @@ repos:
       - circleci/default-flow
       - circleci/nightly
       - circleci/nightly-performance
+      - githubactions/module-tests
     scripts: true
   RedisJSON:
     github: github.com/RedisJSON/RedisJSON
