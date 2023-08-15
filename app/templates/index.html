@@ -25,6 +25,18 @@
             color: #333;
         }
 
+        .tags {
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tag-icon {
+            color: #333;
+            margin-right: 4px;
+        }
+
         .card {
             margin-bottom: 1rem;
         }
@@ -63,6 +75,10 @@
                         <a href="https://{{ repo_data['url'] }}" class="repo-name" target="_blank">{{ repo }}</a>
                     </div>
                     <ul class="list-group list-group-flush">
+                        <div class="list-group-item d-flex align-items-center">
+                            <i class="fas fa-tags tag-icon"></i>
+                            <a href="/tags?title={{ repo }}" class="branch-name">Tags</a>
+                        </div>
                         {% for branch, status in repo_data['branches'].items() %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>

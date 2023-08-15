@@ -31,7 +31,8 @@ class Commit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"))
     message = db.Column(db.String)
-    hash = db.Column(db.String)
+    hash = db.Column(db.String, index=True)
+    tag = db.Column(db.String, index=True)
     author = db.Column(db.String)
     date = db.Column(db.DateTime)
 

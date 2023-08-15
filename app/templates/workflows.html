@@ -19,7 +19,7 @@
                     test_info['status'] == 'running' else '#dc3545' %}
                     {% set status_class = 'success' if test_info['status'] == 'success' else 'warning' if
                     test_info['status'] == 'running' else 'danger' %}
-                    <a href="{{ test_info['html_url'] }}" class="badge badge-{{ status_class }}"
+                    <a href="{{ test_info['html_url'] }}" target="_blank" class="badge badge-{{ status_class }}"
                         style="background-color: {{ status_color }};">{{ test_name }}</a>
                     {% endfor %}
                 </td>
