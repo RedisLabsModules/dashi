@@ -22,5 +22,6 @@ def sync_db():
     current_app.logger.info("Starting to populate the database.")
     utils.populate_repos(db, repos)
     asyncio.run(utils.populate_commits(db))
+    asyncio.run(utils.populate_tags(db))
     asyncio.run(utils.populate_pipelines(db))
     current_app.logger.info("Finished populating the database.")

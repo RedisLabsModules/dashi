@@ -57,6 +57,28 @@ def fetch_github_module_tests_workflow(run_id: str) -> dict:
     }
 
 
+def fetch_github_by_url(url: str):
+    """
+    Fetch Github API using url
+    Args:
+        url (str): url of Github API
+
+    Returns:
+        dict: API resp
+    """
+    headers = {
+        "Authorization": f"Bearer {os.getenv('GH_TOKEN')}",
+        "Accept": "application/vnd.github+json",
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        app.logger.info(url)
+        app.logger.info(f"Error getting info {response.status_code}")
+        return {}
+
+    return response.json()
+
+
 async def fetch_github_commits(
     sem: asyncio.Semaphore,
     session: aiohttp.ClientSession,
@@ -259,6 +281,64 @@ async def populate_commits(db: SQLAlchemy) -> None:
             app.logger.info(
                 f"Added {count} new commit(s) for branch {branch_name} in repo {repo.name}"
             )
+
+
+async def populate_tags(db: SQLAlchemy) -> None:
+    """
+    Populates commit tags in the database by fetching them from GitHub.
+
+    Args:
+        db (SQLAlchemy): Database object.
+    """
+    # Create a semaphore to control the number of concurrent requests
+    sem = asyncio.Semaphore(10)
+
+    async with aiohttp.ClientSession() as session:
+        for repo in db.session.query(models.Repository).all():
+            tasks = []
+            url = f"https://api.github.com/repos/{repo.owner}/{repo.name}/tags"
+            app.logger.info(f"Pulling for new commits in {repo.name}")
+            tasks.append(fetch_github_commits(sem, session, url, None, None))
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for result in results:
+                if isinstance(result, Exception):
+                    app.logger.exception(result)
+                else:
+                    created = 0
+                    updated = 0
+                    tags, _, _ = result
+                    for tag in tags:
+                        commit = (
+                            db.session.query(models.Commit)
+                            .filter(models.Commit.hash == tag["commit"]["sha"])
+                            .first()
+                        )
+                        if commit:
+                            if not commit.tag:
+                                commit.tag = f"{repo.name}/{tag['name']}"
+                                updated += 1
+                        else:
+                            url = tag["commit"]["url"]
+                            commit_details = fetch_github_by_url(url)
+                            if not commit_details:
+                                continue
+                            commit_record = models.Commit(
+                                hash=commit_details["sha"],
+                                message=commit_details["commit"]["message"],
+                                author=commit_details["commit"]["author"]["name"],
+                                date=commit_details["commit"]["author"]["date"],
+                                tag=f"{repo.name}/{tag['name']}",
+                            )
+                            db.session.add(commit_record)
+                            created += 1
+
+                    db.session.commit()
+                    app.logger.info(
+                        f"Added {created} new commit tag(s) in repo {repo.name}"
+                    )
+                    app.logger.info(
+                        f"Updated {updated} existing commit tag(s) in repo {repo.name}"
+                    )
 
 
 def populate_repos(db: SQLAlchemy, repos: dict) -> None:

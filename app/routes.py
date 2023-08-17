@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 from flask import Blueprint, jsonify, render_template, request
 from marshmallow import ValidationError
-from sqlalchemy import and_, desc
+from sqlalchemy import and_, desc, func
 
 from . import db
 from .callback import Callback
@@ -175,8 +175,74 @@ def commits():
         data.append(commit_data)
     return render_template(
         "commits.html",
+        tags=False,
         data=data,
         project=f"{title}/{branch_name}",
+        owner=repo.owner,
+        name=repo.name,
+    )
+
+
+@main.route("/tags")
+def tags():
+    """
+    Retrieve commits and pipeline statuses for a given repository tag's.
+
+    Args:
+        title (str): The title of the repository.
+
+    Returns:
+        str: Rendered HTML template displaying the commits and pipeline statuses.
+    """
+    title = request.args.get("title")
+
+    repo = Repository.query.filter_by(title=title).first()
+
+    tag_prefix = repo.name.lower()
+    commits = (
+        Commit.query.filter(
+            func.lower(Commit.tag).like(f'%{tag_prefix}/%') 
+        )
+        .order_by(desc(Commit.date))
+        .all()
+    )
+    pipelines = Pipeline.query.filter_by(repository_id=repo.id).all()
+
+    data = []
+    for commit in commits:
+        commit_data = {
+            "hash": commit.hash,
+            "tag": commit.tag.split("/")[1],
+            "message": commit.message,
+            "author": commit.author,
+            "date": commit.date,
+            "pipeline_status": [],
+        }
+        for pipeline in pipelines:
+            pipeline_status = (
+                PipelineStatus.query.filter_by(
+                    commit_id=commit.id, pipeline_id=pipeline.id
+                )
+                .order_by(PipelineStatus.timestamp.desc())
+                .first()
+            )
+            if pipeline_status is not None:
+                commit_data["pipeline_status"].append(
+                    {
+                        "status": pipeline_status.status,
+                        "workflow_id": pipeline_status.workflow_id,
+                        "run_number": pipeline_status.run_number,
+                        "name": pipeline.name,
+                        "url": pipeline_status.html_url,
+                        "is_qa_pipeline": pipeline.name == QA_TEST_PIPELINES_NAME,
+                    }
+                )
+        data.append(commit_data)
+    return render_template(
+        "commits.html",
+        tags=True,
+        data=data,
+        project=f"{title}/tags",
         owner=repo.owner,
         name=repo.name,
     )

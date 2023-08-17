@@ -124,6 +124,9 @@
             <thead>
                 <tr>
                     <th scope="col">Hash</th>
+                    {% if tags %}
+                    <th scope="col">Tags</th>
+                    {% endif %}
                     <th scope="col">Status</th>
                     <th scope="col" class="message-column">Message</th>
                     <th scope="col">Author</th>
@@ -140,15 +143,18 @@
                             {{ commit['hash'][:7] }}
                         </a>
                     </td>
+                    {% if tags %}
+                    <td> <i class="fas fa-tags tag-icon"></i> {{ commit['tag'] }}</td>
+                    {% endif %}
                     <td>
                         {% if commit['pipeline_status'] %}
                         {% for pipeline_status in commit['pipeline_status'] %}
-                        <span
+                        <a href="{{ pipeline_status['url'] }}" target="_blank"
                             class="badge {% if pipeline_status['status'] == 'success' %}bg-success{% elif pipeline_status['status'] in ['queued', 'in_progress', 'action_required', 'scheduled', 'running'] %}bg-warning{% elif pipeline_status['status'] in ['failed', 'failing', 'failure'] %}bg-danger{% else %}bg-primary{% endif %}">
                             <i
                                 class="{% if pipeline_status['status'] == 'success' %}fas fa-check-circle{% elif pipeline_status['status'] in ['queued', 'in_progress', 'action_required', 'scheduled', 'running'] %}fas fa-exclamation{% elif pipeline_status['status'] in ['failed', 'failing', 'failure'] %}fas fa-times-circle{% else %}fas fa-info-circle{% endif %}"></i>
                             {{ pipeline_status['name'] }}
-                        </span>
+                        </a>
                         {% endfor %}
                         {% else %}
                         <span class="badge bg-secondary">No Status</span>
@@ -182,6 +188,7 @@
                                         class="{% if pipeline_status['status'] == 'success' %}fas fa-check-circle{% elif pipeline_status['status'] in ['queued', 'in_progress', 'action_required', 'scheduled', 'running'] %}fas fa-exclamation{% elif pipeline_status['status'] in ['failed', 'failing', 'failure'] %}fas fa-times-circle{% else %}fas fa-info-circle{% endif %}"></i>
                                     {{ pipeline_status['name'] }}
                                 </a>
+                                {{ pipeline_status['status'] }}
                             </div>
                             {% endfor %}
 
