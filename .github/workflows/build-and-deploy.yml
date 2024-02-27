@@ -1,9 +1,6 @@
 name: Deploy to Amazon ECS using CDK
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch: 
 env:
   DEFAULT_REGION: eu-west-1
